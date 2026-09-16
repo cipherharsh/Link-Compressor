@@ -1,0 +1,21 @@
+{
+  "name": "linkzip",
+  "version": "1.0.0",
+  "description": "Client-side, zero-backend URL compressor & QR code optimizer",
+  "type": "module",
+  "main": "src/standalone.js",
+  "scripts": {
+    "test": "node tests/roundtrip.test.js && node tests/extension.test.js",
+    "test:roundtrip": "node tests/roundtrip.test.js",
+    "test:extension": "node tests/extension.test.js"
+  },
+  "keywords": [
+    "url-compressor",
+    "qr-code",
+    "huffman-coding",
+    "client-side",
+    "zero-backend"
+  ],
+  "author": "LinkZip Contributors",
+  "license": "MIT"
+}

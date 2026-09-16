@@ -1,0 +1,14 @@
+{
+  "manifest_version": 3,
+  "name": "LinkZip",
+  "version": "1.0.0",
+  "description": "Compress URLs and generate optimized QR codes",
+  "permissions": ["contextMenus", "activeTab", "clipboardWrite", "storage"],
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "action": {
+    "default_popup": "popup.html"
+  }
+}
