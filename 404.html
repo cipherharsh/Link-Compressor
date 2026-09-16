@@ -19,45 +19,39 @@
     .container {
       text-align: center;
       padding: 2rem;
-      max-width: 500px;
+      max-width: 520px;
+      width: 90%;
     }
     h1 { font-size: 1.75rem; margin-bottom: 0.5rem; }
     p  { color: light-dark(#6b7280, #94a3b8); margin-bottom: 1rem; font-size: 0.95rem; }
     .spinner {
-      width: 40px; height: 40px; margin: 1.5rem auto;
+      width: 44px; height: 44px; margin: 1.5rem auto;
       border: 4px solid light-dark(#e5e7eb, #334155);
       border-top-color: light-dark(#4f46e5, #818cf8);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
-    a {
-      color: light-dark(#4f46e5, #818cf8);
-      text-decoration: none;
-      font-weight: 600;
-    }
-    a:hover { text-decoration: underline; }
-    .error { display: none; }
-    .error.visible { display: block; }
     .decoded-url {
       word-break: break-all;
       font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       background: light-dark(#f1f5f9, #1e293b);
-      padding: 0.75rem;
+      padding: 0.85rem;
       border-radius: 8px;
       margin: 1rem 0;
       text-align: left;
     }
     .actions { display: flex; gap: 0.5rem; justify-content: center; margin-top: 1rem; }
     .btn {
-      padding: 0.5rem 1rem;
+      padding: 0.6rem 1.2rem;
       border: none;
       border-radius: 6px;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       text-decoration: none;
+      display: inline-block;
     }
     .btn-primary { background: light-dark(#4f46e5, #818cf8); color: #fff; }
     .btn-secondary { background: light-dark(#e5e7eb, #334155); color: light-dark(#1a1a2e, #e2e8f0); }
@@ -72,53 +66,308 @@
       <div class="spinner"></div>
     </div>
 
-    <!-- Success state (brief flash before redirect) -->
+    <!-- Success state -->
     <div id="success" style="display:none">
-      <h1>🔗 Redirecting</h1>
+      <h1>🔗 Redirecting…</h1>
       <p>Taking you to:</p>
       <div class="decoded-url" id="decoded-url"></div>
       <div class="actions">
-        <a class="btn btn-primary" id="go-link" href="#">Go now</a>
+        <a class="btn btn-primary" id="go-link" href="#">Open Now</a>
       </div>
     </div>
 
     <!-- Error state -->
     <div id="error-state" style="display:none">
       <h1>😕 Invalid Link</h1>
-      <p>This compressed link couldn't be decoded. It may be corrupted or from a different version of LinkZip.</p>
+      <p id="error-desc">This compressed link couldn't be decoded. It may be corrupted or missing.</p>
       <div class="actions">
-        <a class="btn btn-primary" href="/">Open LinkZip</a>
+        <a class="btn btn-primary" id="home-link" href="./">Open LinkZip</a>
       </div>
     </div>
   </div>
 
-  <script type="module">
-    import { decode } from "./src/standalone.js";
+  <!-- 100% Inline Self-Contained Decode Engine (Zero external dependencies) -->
+  <script>
+    (function () {
+      "use strict";
 
-    (async function () {
-      // 1. Try payload from hash (e.g. #/ABC or #ABC)
-      let payload = "";
-      if (window.location.hash && window.location.hash.length > 1) {
-        payload = window.location.hash.replace(/^#\/?/, "");
-      }
-      
-      // 2. Try payload from query param (e.g. ?c=ABC or ?ABC)
-      if (!payload && window.location.search && window.location.search.length > 1) {
-        const params = new URLSearchParams(window.location.search);
-        payload = params.get("c") || params.get("p") || params.get("l") || window.location.search.slice(1);
+      // ── Subalphabets ──────────────────────────────────────────────────────────
+      const subalphabets = [
+        "0123456789-_",
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ-_",
+        "abcdefghijklmnopqrstuvwxyz-_",
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_",
+        "abcdefghijklmnopqrstuvwxyz0123456789-_",
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_",
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_",
+        "!#$&'()*+,-.0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz~%"
+      ];
+
+      const outputAlphabetASCII =
+        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_".split("");
+
+      const outputAlphabetQR =
+        "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$-+*.".split("");
+
+      function buildHuffmanTable(symbols) {
+        if (!symbols || symbols.length === 0) return { encode: {}, decode: {} };
+        if (symbols.length === 1) return { encode: { [symbols[0]]: "0" }, decode: { "0": symbols[0] } };
+        let nodes = symbols.map((s, i) => ({ freq: 1 / (i + 1), symbol: s }));
+        while (nodes.length > 1) {
+          nodes.sort((a, b) => a.freq - b.freq);
+          const left = nodes.shift();
+          const right = nodes.shift();
+          nodes.push({ freq: left.freq + right.freq, left, right });
+        }
+        const encode = {}, decode = {};
+        (function walk(node, code) {
+          if (node.symbol !== undefined) {
+            const c = code || "0";
+            encode[node.symbol] = c;
+            decode[c] = node.symbol;
+            return;
+          }
+          if (node.left) walk(node.left, code + "0");
+          if (node.right) walk(node.right, code + "1");
+        })(nodes[0], "");
+        return { encode, decode };
       }
 
-      // 3. Try last segment of pathname (e.g. /Link-Compressor/ABC -> ABC or /ABC -> ABC)
-      if (!payload) {
+      const TLD_LIST = [
+        "com","org","net","ru","de","uk","jp","br","it","fr",
+        "au","nl","cn","ca","in","pl","es","eu","ch","se",
+        "cz","be","at","info","me","us","edu","gov","tv","io",
+        "co","cc","za","kr","mx","ar","tr","cl","pt","tw",
+        "dk","hu","no","fi","nz","sk","ro","ua","bg","il",
+        "hk","ie","sg","gr","th","my","lt","lv","ee","si",
+        "hr","is","lu","cy","ph","vn","id","ng","ke","eg",
+        "pk","bd","sa","ae","xyz","online","site","club","pro","biz",
+        "app","dev","tech","store","live","world","today","space","fun","top",
+        "icu","link","click","news","rocks","win","mobi","name","asia","cat",
+        "tel","travel","jobs","mil","int","museum","coop","aero","xxx","pw"
+      ];
+
+      const DOMAIN_LIST = [
+        "google","youtube","facebook","amazon","twitter","instagram","linkedin",
+        "reddit","wikipedia","netflix","apple","microsoft","github","stackoverflow",
+        "wordpress","tumblr","pinterest","dropbox","medium","quora","twitch",
+        "spotify","yahoo","bing","ebay","bbc","nytimes","cnn","theguardian",
+        "reuters","bloomberg","wsj","forbes","techcrunch","wired","arstechnica",
+        "gitlab","bitbucket","npm","pypi","docker","aws","azure","heroku",
+        "vercel","netlify","cloudflare","digitalocean","godaddy","namecheap",
+        "squarespace","wix","shopify","etsy","walmart","target","bestbuy",
+        "costco","homedepot","ikea","nike","adidas","samsung","sony","dell",
+        "hp","lenovo","intel","amd","nvidia","cisco","oracle","ibm",
+        "salesforce","adobe","figma","canva","notion","slack","discord","zoom",
+        "whatsapp","telegram","signal","snapchat","tiktok","vimeo","soundcloud",
+        "uber","lyft","airbnb","booking","expedia","tripadvisor","yelp",
+        "stripe","paypal","chase","wellsfargo","capitalone","imdb","hulu",
+        "disneyplus","crunchyroll","openai","anthropic","huggingface","kaggle",
+        "coursera","udemy","edx","khanacademy","duolingo","grammarly",
+        "stackoverflow","trello","asana","jira","confluence","miro","loom",
+        "calendly","mailchimp","hubspot","zendesk","intercom","datadog",
+        "splunk","elastic","grafana","prometheus","terraform","ansible",
+        "kubernetes","nginx","apache","wordpress","drupal","magento",
+        "firebase","supabase","planetscale","neon","vercel","railway",
+        "render","fly","deno","bun","svelte","react","angular","vue",
+        "nextjs","nuxt","remix","gatsby","astro","vite","webpack","babel",
+        "eslint","prettier","jest","vitest","playwright","cypress","selenium",
+        "storybook","chromatic","lottie","threejs","d3js","chartjs",
+        "mapbox","leaflet","cesium","unity","unrealengine","godotengine",
+        "blender","gimp","inkscape","audacity","obs","vlc","ffmpeg",
+        "handbrake","calibre","keepass","bitwarden","protonmail","tutanota",
+        "mullvad","wireguard","tailscale","zerotier","syncthing","restic",
+        "rclone","borg","timeshift","ventoy","rufus","etcher","raspberry"
+      ];
+
+      const PATH_SEGMENT_LIST = [
+        "watch","search","wiki","api","v1","v2","v3","docs","help","about",
+        "contact","login","signup","register","profile","settings","dashboard",
+        "admin","users","user","posts","post","comments","comment","articles",
+        "article","products","product","categories","category","tags","tag",
+        "pages","page","images","image","files","file","uploads","upload",
+        "downloads","download","assets","static","public","shared","status",
+        "releases","release","issues","issue","pulls","pull","commits","commit",
+        "branches","branch","raw","blob","tree","edit","delete","create",
+        "new","update","view","list","index","home","feed","explore","trending",
+        "popular","latest","featured","archive","blog","news","events","shop",
+        "cart","checkout","orders","order","payment","pricing","plans","support",
+        "faq","terms","privacy","security","en","es","fr","de","ja","zh",
+        "ko","pt","ru","it","nl","pl","ar","hi","src","lib","bin","pkg",
+        "dist","build","config","data","tmp","log","test","tests","spec",
+        "app","main","server","client","web","mobile","desktop","embed"
+      ];
+
+      const tldHuffman     = buildHuffmanTable(TLD_LIST);
+      const domainHuffman  = buildHuffmanTable(DOMAIN_LIST);
+      const pathSegHuffman = buildHuffmanTable(PATH_SEGMENT_LIST);
+
+      class BitReader {
+        constructor(bits) { this.bits = bits; this.pos = 0; }
+        read(n) {
+          let v = 0;
+          for (let i = 0; i < n; i++) v = (v << 1) | (this.bits[this.pos++] || 0);
+          return v;
+        }
+        readBit() { return this.bits[this.pos++] || 0; }
+        readVarLen() {
+          const flag = this.readBit();
+          return flag === 0 ? this.read(5) : this.read(8);
+        }
+        hasMore() { return this.pos < this.bits.length; }
+      }
+
+      function bitsPerChar(n) { return Math.ceil(Math.log2(n)); }
+
+      function decodeSegment(reader) {
+        const alphaIdx = reader.read(3);
+        const len      = reader.readVarLen();
+        const alpha    = subalphabets[alphaIdx];
+        const bpc      = bitsPerChar(alpha.length);
+        let out = "";
+        for (let i = 0; i < len; i++) out += alpha[reader.read(bpc)] || "?";
+        return out;
+      }
+
+      function huffmanDecode(reader, huffTable) {
+        const hit = reader.readBit();
+        if (hit === 1) {
+          let code = "";
+          while (true) {
+            code += reader.readBit();
+            if (huffTable.decode[code] !== undefined) return huffTable.decode[code];
+            if (code.length > 30) throw new Error("Huffman decode: code too long");
+          }
+        }
+        return null;
+      }
+
+      function buildURL(p) {
+        let url = p.isHttps ? "https://" : "http://";
+        if (p.hasWWW) url += "www.";
+        if (p.subdomain) url += p.subdomain + ".";
+        url += p.domain;
+        if (p.tld) url += "." + p.tld;
+        if (p.hasPort) url += ":" + p.port;
+        if (p.pathSegments.length > 0) url += "/" + p.pathSegments.join("/");
+        if (p.hasTrailingSlash) url += "/";
+        if (p.hasIndexHtml) {
+          if (p.hasTrailingSlash) url += "index.html";
+          else url += "/index.html";
+        }
+        if (p.hasQuery) url += "?" + p.query;
+        if (p.fragment) url += "#" + p.fragment;
+        return url;
+      }
+
+      function decompress(bits) {
+        const reader = new BitReader(bits);
+        const p = {
+          isHttps: true, hasWWW: false, hasIndexHtml: false,
+          hasPort: false, port: 0, hasQuery: false, hasTrailingSlash: false,
+          tld: "", domain: "", subdomain: "",
+          pathSegments: [], query: "", fragment: "",
+        };
+
+        const version = reader.read(3);
+        if (version !== 0) throw new Error("Unsupported version: " + version);
+
+        p.isHttps          = reader.readBit() === 1;
+        p.hasWWW           = reader.readBit() === 1;
+        p.hasIndexHtml     = reader.readBit() === 1;
+        p.hasPort          = reader.readBit() === 1;
+        p.hasQuery         = reader.readBit() === 1;
+        p.hasTrailingSlash = reader.readBit() === 1;
+
+        if (p.hasPort) p.port = reader.read(16);
+
+        const tldResult = huffmanDecode(reader, tldHuffman);
+        p.tld = tldResult !== null ? tldResult : decodeSegment(reader);
+
+        const domResult = huffmanDecode(reader, domainHuffman);
+        p.domain = domResult !== null ? domResult : decodeSegment(reader);
+
+        const hasSub = reader.readBit();
+        if (hasSub) {
+          const subCount = reader.readVarLen();
+          const subParts = [];
+          for (let i = 0; i < subCount; i++) subParts.push(decodeSegment(reader));
+          p.subdomain = subParts.join(".");
+        }
+
+        const pathCount = reader.readVarLen();
+        for (let i = 0; i < pathCount; i++) {
+          const segResult = huffmanDecode(reader, pathSegHuffman);
+          p.pathSegments.push(segResult !== null ? segResult : decodeSegment(reader));
+        }
+
+        if (p.hasQuery) p.query = decodeSegment(reader);
+        const hasFrag = reader.readBit();
+        if (hasFrag) p.fragment = decodeSegment(reader);
+
+        return buildURL(p);
+      }
+
+      function stringToBits(str, alphabet) {
+        const base = BigInt(alphabet.length);
+        const charMap = new Map();
+        alphabet.forEach((ch, i) => charMap.set(ch, BigInt(i)));
+
+        let num = 0n;
+        for (const ch of str) {
+          const val = charMap.get(ch);
+          if (val === undefined) throw new Error("Invalid character: " + ch);
+          num = num * base + val;
+        }
+
+        const bits = [];
+        while (num > 0n) {
+          bits.push(Number(num & 1n));
+          num >>= 1n;
+        }
+        bits.reverse();
+
+        if (bits.length > 0 && bits[0] === 1) bits.shift();
+        return bits;
+      }
+
+      function decode(str, mode) {
+        const alphabet = mode === "qr" ? outputAlphabetQR : outputAlphabetASCII;
+        const bits = stringToBits(str, alphabet);
+        return decompress(bits);
+      }
+
+      // ── Extraction and Redirection Logic ──────────────────────────────────────
+      function getPayload() {
+        // 1. Hash: #144f... or #/144f...
+        if (window.location.hash && window.location.hash.length > 1) {
+          return window.location.hash.replace(/^#\/?/, "");
+        }
+
+        // 2. Query param: ?c=144f... or ?144f...
+        if (window.location.search && window.location.search.length > 1) {
+          const params = new URLSearchParams(window.location.search);
+          const p = params.get("c") || params.get("p") || params.get("l");
+          if (p) return p;
+          const rawQ = window.location.search.replace(/^\?/, "");
+          if (rawQ && !rawQ.includes("=")) return rawQ;
+        }
+
+        // 3. Path segments (e.g. /Link-Compressor/144f... or /144f...)
         const segments = window.location.pathname.split("/").filter(Boolean);
         if (segments.length > 0) {
-          payload = segments[segments.length - 1];
+          const last = segments[segments.length - 1];
+          if (last && last !== "404" && last !== "404.html" && last !== "index.html") {
+            return last;
+          }
         }
+        return "";
       }
 
-      // Clean up common file names
-      if (!payload || payload === "404" || payload === "404.html" || payload === "index.html") {
-        // No compressed path — redirect to home
+      const payload = getPayload();
+
+      if (!payload) {
+        // No payload, send back to home
         window.location.replace("./");
         return;
       }
@@ -131,24 +380,24 @@
           url = decode(payload, "qr");
         }
 
-        // Basic safety: only redirect to http(s) URLs
         if (!/^https?:\/\//i.test(url)) {
-          throw new Error("Decoded value is not a valid URL");
+          throw new Error("Decoded value is not a valid HTTP/HTTPS URL");
         }
 
-        // Show success state briefly
+        // Display destination
         document.getElementById("loading").style.display = "none";
         document.getElementById("success").style.display = "block";
         document.getElementById("decoded-url").textContent = url;
         document.getElementById("go-link").href = url;
 
-        // Auto‑redirect after a short delay (lets the user see where they're going)
-        setTimeout(() => window.location.replace(url), 600);
+        // Perform instant redirect
+        window.location.replace(url);
 
       } catch (err) {
-        console.error("LinkZip decode error:", err);
+        console.error("LinkZip redirect error:", err);
         document.getElementById("loading").style.display = "none";
         document.getElementById("error-state").style.display = "block";
+        document.getElementById("error-desc").textContent = "Could not decode link: " + err.message;
       }
     })();
   </script>

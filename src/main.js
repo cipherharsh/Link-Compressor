@@ -213,7 +213,20 @@ inputDecode.addEventListener("input", () => {
     initPayload = params.get("c") || params.get("p") || params.get("l") || window.location.search.slice(1);
   }
   if (initPayload && initPayload !== "compress" && initPayload !== "decode") {
-    // Switch to decode tab
+    try {
+      let targetUrl;
+      try {
+        targetUrl = decode(initPayload, "ascii");
+      } catch {
+        targetUrl = decode(initPayload, "qr");
+      }
+      if (/^https?:\/\//i.test(targetUrl)) {
+        window.location.replace(targetUrl);
+        return;
+      }
+    } catch {}
+
+    // Fallback: populate decode tab
     $("tab-decode").click();
     inputDecode.value = initPayload;
     doDecode();
