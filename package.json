@@ -5,9 +5,10 @@
   "type": "module",
   "main": "src/standalone.js",
   "scripts": {
-    "test": "node tests/roundtrip.test.js && node tests/extension.test.js",
+    "test": "node tests/roundtrip.test.js && node tests/extension.test.js && node tests/qr.test.js",
     "test:roundtrip": "node tests/roundtrip.test.js",
-    "test:extension": "node tests/extension.test.js"
+    "test:extension": "node tests/extension.test.js",
+    "test:qr": "node tests/qr.test.js"
   },
   "keywords": [
     "url-compressor",

@@ -111,8 +111,8 @@ function doCompress() {
     // ── QR code (encodes full short URL so phones open website) ─────
     try {
       const qr = generateQR(shortLink, ecLevel);
-      renderToCanvas(qrCanvas, qr.matrix, { scale: 6, margin: 4 });
-      currentSVG = renderToSVG(qr.matrix, { scale: 1, margin: 4 });
+      renderToCanvas(qrCanvas, qr.matrix, { scale: 8, margin: 4 });
+      currentSVG = renderToSVG(qr.matrix, { scale: 8, margin: 4 });
       qrVersion.textContent = `Version: ${qr.version}`;
       qrMode.textContent    = `Mode: ${qr.mode}`;
     } catch (qrErr) {
