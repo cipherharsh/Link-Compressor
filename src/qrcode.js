@@ -188,27 +188,30 @@ function gfMul(x, y) {
   return EXP_TABLE[LOG_TABLE[x] + LOG_TABLE[y]];
 }
 
-function rsCompute(data, eccLen) {
-  // Generate generator polynomial for given eccLen
-  const gen = new Uint8Array(eccLen);
-  gen[eccLen - 1] = 1;
-  let root = 1;
+function rsGeneratorPoly(eccLen) {
+  let g = [1];
   for (let i = 0; i < eccLen; i++) {
-    for (let j = 0; j < eccLen; j++) {
-      gen[j] = gfMul(gen[j], root);
-      if (j + 1 < eccLen) gen[j] ^= gen[j + 1];
+    const root = EXP_TABLE[i];
+    const next = new Array(g.length + 1).fill(0);
+    for (let j = 0; j < g.length; j++) {
+      next[j] ^= g[j];
+      next[j + 1] ^= gfMul(g[j], root);
     }
-    root = gfMul(root, 2);
+    g = next;
   }
+  return g;
+}
 
-  // Polynomial division
+function rsCompute(data, eccLen) {
+  const gen = rsGeneratorPoly(eccLen);
   const ecc = new Uint8Array(eccLen);
+
   for (let i = 0; i < data.length; i++) {
     const factor = data[i] ^ ecc[0];
     for (let j = 0; j < eccLen - 1; j++) {
-      ecc[j] = ecc[j + 1] ^ gfMul(gen[j], factor);
+      ecc[j] = ecc[j + 1] ^ gfMul(gen[j + 1], factor);
     }
-    ecc[eccLen - 1] = gfMul(gen[eccLen - 1], factor);
+    ecc[eccLen - 1] = gfMul(gen[eccLen], factor);
   }
   return ecc;
 }
@@ -338,27 +341,27 @@ class QRCodeModel {
     }
     const formatBits = ((data << 10) | bch) ^ 0x5412;
 
-    // Top-left horizontal & vertical
-    for (let i = 0; i < 6; i++) {
-      const bit = ((formatBits >>> i) & 1) === 1;
-      this.setFunction(i, 8, bit);
+    // Top-left:
+    // Vertical part: (0..5, 8), (7, 8), (8, 8) -> b0..b7
+    for (let i = 0; i <= 5; i++) {
+      this.setFunction(i, 8, ((formatBits >>> i) & 1) === 1);
     }
     this.setFunction(7, 8, ((formatBits >>> 6) & 1) === 1);
     this.setFunction(8, 8, ((formatBits >>> 7) & 1) === 1);
     this.setFunction(8, 7, ((formatBits >>> 8) & 1) === 1);
+    // Horizontal part: (8, 5..0) -> b9..b14
     for (let i = 9; i < 15; i++) {
-      const bit = ((formatBits >>> i) & 1) === 1;
-      this.setFunction(8, 14 - i, bit);
+      this.setFunction(8, 14 - i, ((formatBits >>> i) & 1) === 1);
     }
 
-    // Top-right horizontal & bottom-left vertical
-    for (let i = 0; i < 8; i++) {
-      const bit = ((formatBits >>> i) & 1) === 1;
-      this.setFunction(8, this.moduleCount - 1 - i, bit);
+    // Second copy:
+    // Bottom-left: (N-1..N-7, 8) -> b0..b6
+    for (let i = 0; i < 7; i++) {
+      this.setFunction(this.moduleCount - 1 - i, 8, ((formatBits >>> i) & 1) === 1);
     }
-    for (let i = 8; i < 15; i++) {
-      const bit = ((formatBits >>> i) & 1) === 1;
-      this.setFunction(this.moduleCount - 15 + i, 8, bit);
+    // Top-right: (8, N-8..N-1) -> b7..b14
+    for (let i = 0; i < 8; i++) {
+      this.setFunction(8, this.moduleCount - 8 + i, ((formatBits >>> (i + 7)) & 1) === 1);
     }
 
     // Dark module at (4*V + 9, 8)
@@ -403,8 +406,9 @@ class QRCodeModel {
     }
   }
 
-  mapData(dataBits, maskPattern) {
+  mapData(dataBytes, maskPattern) {
     let bitIndex = 0;
+    const totalBits = dataBytes.length * 8;
     let upward = true;
 
     for (let right = this.moduleCount - 1; right > 0; right -= 2) {
@@ -415,10 +419,10 @@ class QRCodeModel {
         for (let c = right; c >= right - 1; c--) {
           if (!this.isFunction[r][c]) {
             let bit = false;
-            if (bitIndex < dataBits.length) {
+            if (bitIndex < totalBits) {
               const byteIdx = Math.floor(bitIndex / 8);
               const bitOffset = 7 - (bitIndex % 8);
-              bit = ((dataBits[byteIdx] >>> bitOffset) & 1) === 1;
+              bit = ((dataBytes[byteIdx] >>> bitOffset) & 1) === 1;
               bitIndex++;
             }
             // Apply mask
@@ -496,7 +500,6 @@ function getPenaltyScore(model) {
   for (let r = 0; r < size; r++) {
     for (let c = 0; c < size - 6; c++) {
       if (model.modules[r][c] && !model.modules[r][c+1] && model.modules[r][c+2] && model.modules[r][c+3] && model.modules[r][c+4] && !model.modules[r][c+5] && model.modules[r][c+6]) {
-        // Check 4 white on either side
         if (c >= 4 && !isDark(r, c-1) && !isDark(r, c-2) && !isDark(r, c-3) && !isDark(r, c-4)) penalty += 40;
         else if (c + 10 < size && !isDark(r, c+7) && !isDark(r, c+8) && !isDark(r, c+9) && !isDark(r, c+10)) penalty += 40;
       }
@@ -613,8 +616,8 @@ export function generateQR(text, ecLevelStr = "M") {
   // Pad with alternating 0xEC and 0x11
   const padBytes = [0xec, 0x11];
   let padIdx = 0;
-  while (bitBuf.length < totalDataBits) {
-    bitBuf.put(padBytes[padIdx % 2], 8);
+  while (bitBuf.buffer.length < totalDataCW) {
+    bitBuf.buffer.push(padBytes[padIdx % 2]);
     padIdx++;
   }
 
