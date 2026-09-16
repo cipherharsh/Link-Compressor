@@ -93,7 +93,8 @@ function doCompress() {
 
     // ── ASCII encoding for link ──────────────────────────────────────
     const { encoded, analytics } = encode(url, "ascii");
-    const shortLink = `https://${domain}/${encoded}`;
+    const protocol = (typeof window !== "undefined" && window.location.protocol === "http:") ? "http://" : "https://";
+    const shortLink = `${protocol}${domain}/${encoded}`;
 
     resultText.textContent = shortLink;
     compressError.classList.remove("visible");
@@ -146,6 +147,30 @@ inputURL.addEventListener("input", () => {
 // Decode
 // ═══════════════════════════════════════════════════════════════════════════
 
+function extractPayload(raw) {
+  let encoded = raw.trim();
+  if (/^https?:\/\//i.test(encoded)) {
+    try {
+      const u = new URL(encoded);
+      if (u.hash && u.hash.length > 1) {
+        encoded = u.hash.replace(/^#\/?/, "");
+      } else if (u.search && u.search.length > 1) {
+        const params = new URLSearchParams(u.search);
+        encoded = params.get("c") || params.get("p") || params.get("l") || u.search.replace(/^\?/, "");
+      } else {
+        const parts = u.pathname.split("/").filter(Boolean);
+        encoded = parts[parts.length - 1] || "";
+      }
+    } catch {
+      encoded = encoded.replace(/^https?:\/\/[^\/]+\/?/, "");
+    }
+  } else if (encoded.includes("/")) {
+    const parts = encoded.split("/").filter(Boolean);
+    encoded = parts[parts.length - 1] || "";
+  }
+  return encoded;
+}
+
 function doDecode() {
   const raw = inputDecode.value.trim();
   if (!raw) {
@@ -155,14 +180,15 @@ function doDecode() {
   }
 
   try {
-    // Strip domain prefix if present
-    let encoded = raw;
-    if (/^https?:\/\//i.test(encoded)) {
-      const parts = new URL(encoded);
-      encoded = parts.pathname.replace(/^\//, "");
+    const encoded = extractPayload(raw);
+
+    let url;
+    try {
+      url = decode(encoded, "ascii");
+    } catch {
+      url = decode(encoded, "qr");
     }
 
-    const url = decode(encoded, "ascii");
     decodeResultText.textContent = url;
     decodeResultText.href = url;
     decodeError.classList.remove("visible");
@@ -177,6 +203,24 @@ inputDecode.addEventListener("input", () => {
   clearTimeout(debounceTimer);
   debounceTimer = setTimeout(doDecode, 300);
 });
+
+// Check if loaded with a hash or query payload (e.g. index.html#ABC or index.html?c=ABC)
+(function checkInitialPayload() {
+  if (typeof window === "undefined" || !window.location) return;
+  let initPayload = "";
+  if (window.location.hash && window.location.hash.length > 1) {
+    initPayload = window.location.hash.replace(/^#\/?/, "");
+  } else if (window.location.search && window.location.search.length > 1) {
+    const params = new URLSearchParams(window.location.search);
+    initPayload = params.get("c") || params.get("p") || params.get("l") || window.location.search.slice(1);
+  }
+  if (initPayload && initPayload !== "compress" && initPayload !== "decode") {
+    // Switch to decode tab
+    $("tab-decode").click();
+    inputDecode.value = initPayload;
+    doDecode();
+  }
+})();
 
 // ═══════════════════════════════════════════════════════════════════════════
 // Clipboard

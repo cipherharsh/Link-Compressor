@@ -21,10 +21,10 @@
   ];
 
   const outputAlphabetASCII =
-    "!#$&'()*+,-./0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz~".split("");
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_".split("");
 
   const outputAlphabetQR =
-    "$*+-./:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+    "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$-+*.".split("");
 
   function buildHuffmanTable(symbols) {
     const n = symbols.length;

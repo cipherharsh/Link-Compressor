@@ -6,7 +6,25 @@
  */
 
 const STORAGE_PREFIX = "linkzip_";
-const DEFAULT_DOMAIN = "linkzip.pages.dev";
+const FALLBACK_DOMAIN = "linkzip.pages.dev";
+
+export function detectCurrentDomain() {
+  if (typeof window !== "undefined" && window.location) {
+    const host = window.location.host;
+    if (!host) return FALLBACK_DOMAIN;
+    let path = window.location.pathname
+      .replace(/\/index\.html$/i, "")
+      .replace(/\/404\.html$/i, "");
+    if (path.endsWith("/")) path = path.slice(0, -1);
+    const full = (host + path).replace(/\/+$/, "");
+    return full || FALLBACK_DOMAIN;
+  }
+  return FALLBACK_DOMAIN;
+}
+
+export function getDefaultDomain() {
+  return detectCurrentDomain();
+}
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -28,17 +46,23 @@ function set(key, value) {
 // ── Active domain ────────────────────────────────────────────────────────────
 
 export function getDomain() {
-  return get("active_domain", DEFAULT_DOMAIN);
+  const current = detectCurrentDomain();
+  const saved = get("active_domain", null);
+  if (saved && saved !== FALLBACK_DOMAIN) return saved;
+  return current;
 }
 export function setDomain(domain) {
   set("active_domain", domain.replace(/\/+$/, "").trim());
 }
-export function getDefaultDomain() { return DEFAULT_DOMAIN; }
 
 // ── Domain profiles ──────────────────────────────────────────────────────────
 
 export function getDomainProfiles() {
-  return get("domain_profiles", [{ name: "Default", domain: DEFAULT_DOMAIN }]);
+  const current = detectCurrentDomain();
+  const defaultProfiles = current !== FALLBACK_DOMAIN
+    ? [{ name: "Current Domain", domain: current }, { name: "LinkZip Default", domain: FALLBACK_DOMAIN }]
+    : [{ name: "Default", domain: FALLBACK_DOMAIN }];
+  return get("domain_profiles", defaultProfiles);
 }
 export function addDomainProfile(name, domain) {
   const profiles = getDomainProfiles();
@@ -52,10 +76,9 @@ export function removeDomainProfile(domain) {
   let profiles = getDomainProfiles();
   profiles = profiles.filter(p => p.domain !== domain);
   if (profiles.length === 0) {
-    profiles = [{ name: "Default", domain: DEFAULT_DOMAIN }];
+    profiles = [{ name: "Default", domain: detectCurrentDomain() }];
   }
   set("domain_profiles", profiles);
-  // If removed profile was active, fall back to first
   if (getDomain() === domain) setDomain(profiles[0].domain);
 }
 

@@ -96,16 +96,40 @@
     import { decode } from "./src/standalone.js";
 
     (async function () {
-      const path = window.location.pathname.replace(/^\//, "");
+      // 1. Try payload from hash (e.g. #/ABC or #ABC)
+      let payload = "";
+      if (window.location.hash && window.location.hash.length > 1) {
+        payload = window.location.hash.replace(/^#\/?/, "");
+      }
+      
+      // 2. Try payload from query param (e.g. ?c=ABC or ?ABC)
+      if (!payload && window.location.search && window.location.search.length > 1) {
+        const params = new URLSearchParams(window.location.search);
+        payload = params.get("c") || params.get("p") || params.get("l") || window.location.search.slice(1);
+      }
 
-      if (!path) {
+      // 3. Try last segment of pathname (e.g. /Link-Compressor/ABC -> ABC or /ABC -> ABC)
+      if (!payload) {
+        const segments = window.location.pathname.split("/").filter(Boolean);
+        if (segments.length > 0) {
+          payload = segments[segments.length - 1];
+        }
+      }
+
+      // Clean up common file names
+      if (!payload || payload === "404" || payload === "404.html" || payload === "index.html") {
         // No compressed path — redirect to home
-        window.location.replace("/");
+        window.location.replace("./");
         return;
       }
 
       try {
-        const url = decode(path, "ascii");
+        let url;
+        try {
+          url = decode(payload, "ascii");
+        } catch {
+          url = decode(payload, "qr");
+        }
 
         // Basic safety: only redirect to http(s) URLs
         if (!/^https?:\/\//i.test(url)) {
@@ -119,7 +143,7 @@
         document.getElementById("go-link").href = url;
 
         // Auto‑redirect after a short delay (lets the user see where they're going)
-        setTimeout(() => window.location.replace(url), 800);
+        setTimeout(() => window.location.replace(url), 600);
 
       } catch (err) {
         console.error("LinkZip decode error:", err);

@@ -29,17 +29,16 @@ export const subalphabets = [
 // Output alphabets – used to convert the final bitstream into a string
 // ────────────────────────────────────────────────────────────────────────────
 
-/** 78‑char URL‑safe alphabet for link output. Avoids characters that need
- *  percent‑encoding in URL paths (no space, no ", no < > { } | \ ^ ` ).  */
+/** 64‑char RFC 4648 URL‑safe alphabet for link output. Contains only letters,
+ *  digits, hyphen and underscore. 100% clean in all URL paths, markdown, SMS,
+ *  messaging apps, and never splits into query/fragment/directories.        */
 export const outputAlphabetASCII =
-  "!#$&'()*+,-./0123456789:;=?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[]_abcdefghijklmnopqrstuvwxyz~".split("");
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz-_".split("");
 
-/** 42‑char subset of the QR alphanumeric charset.  The full QR‑A set is
- *  0–9 A–Z SP $ % * + - . / :  (45 chars).  We drop space, %, and use
- *  a strict sub‑set so every character is safe in a URL path *and*
- *  guaranteed to stay in QR alphanumeric mode.                           */
+/** 42‑char subset of the QR alphanumeric charset. Contains digits, uppercase
+ *  letters, and URL-safe QR punctuation (no slash or space or percent).     */
 export const outputAlphabetQR =
-  "$*+-./:0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+  "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$-+*.".split("");
 
 // ────────────────────────────────────────────────────────────────────────────
 // Huffman table builder
