@@ -108,13 +108,11 @@ function doCompress() {
     // ── Breakdown ────────────────────────────────────────────────────
     breakdownEl.innerHTML = renderBreakdownHTML(analysis);
 
-    // ── QR code (use QR alphabet for optimal QR density) ─────────────
+    // ── QR code (encodes full short URL so phones open website) ─────
     try {
-      const { encoded: qrEncoded } = encode(url, "qr");
-      const qrData = qrEncoded.toUpperCase();  // QR alphanumeric needs uppercase
-      const qr = generateQR(qrData, ecLevel);
-      renderToCanvas(qrCanvas, qr.matrix, { scale: 6, margin: 2 });
-      currentSVG = renderToSVG(qr.matrix, { scale: 1, margin: 2 });
+      const qr = generateQR(shortLink, ecLevel);
+      renderToCanvas(qrCanvas, qr.matrix, { scale: 6, margin: 4 });
+      currentSVG = renderToSVG(qr.matrix, { scale: 1, margin: 4 });
       qrVersion.textContent = `Version: ${qr.version}`;
       qrMode.textContent    = `Mode: ${qr.mode}`;
     } catch (qrErr) {
