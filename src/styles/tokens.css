@@ -1,0 +1,131 @@
+/*
+ * PURPOSE: Global design system tokens and variables for the LinkZip 3D experience.
+ * INPUTS: CSS root variables, user preferences (color-scheme, reduced-motion).
+ * OUTPUTS: Global CSS variables for typography, palette, radius, z-index, and motion.
+ * DEPENDS_ON: Google Fonts (Space Grotesk, Inter, JetBrains Mono).
+ * WHY_THIS_DESIGN: Zero-runtime CSS variables allow instant synchronization between React UI and Three.js canvas.
+ */
+
+:root {
+  /* Colors */
+  --color-bg: #0B0D12;
+  --color-surface: #141821;
+  --color-surface-hover: #1c2230;
+  --color-surface-glass: rgba(20, 24, 33, 0.75);
+  --color-border: rgba(255, 255, 255, 0.08);
+  --color-border-glow: rgba(108, 242, 194, 0.3);
+  --color-text: #F2F4F8;
+  --color-muted: #8A93A6;
+  --color-accent: #6CF2C2;
+  --color-accent-dim: rgba(108, 242, 194, 0.15);
+  --color-accent-2: #7C8CFF;
+  --color-accent-2-dim: rgba(124, 140, 255, 0.15);
+  --color-danger: #FF6B81;
+  --color-xp: #FFD166;
+  --color-xp-dim: rgba(255, 209, 102, 0.15);
+
+  /* Typography */
+  --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Font sizes & clamp */
+  --text-display: clamp(3.2rem, 11vw, 10rem);
+  --text-h1: clamp(2rem, 5vw, 3.5rem);
+  --text-h2: clamp(1.5rem, 3.5vw, 2.25rem);
+  --text-h3: clamp(1.2rem, 2.5vw, 1.5rem);
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-xs: 0.75rem;
+
+  /* Radius */
+  --radius-sm: 8px;
+  --radius-card: 16px;
+  --radius-lg: 24px;
+  --radius-pill: 9999px;
+
+  /* Spacing Scale (4, 8, 12, 16, 24, 32, 48, 64, 96, 128) */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --space-9: 96px;
+  --space-10: 128px;
+
+  /* Motion & Transitions */
+  --duration-micro: 0.2s;
+  --duration-ui: 0.45s;
+  --duration-scene: 1.8s;
+  --duration-chapter: 1.2s;
+  --ease-default: cubic-bezier(0.215, 0.61, 0.355, 1); /* power3.out */
+  --ease-collapse: cubic-bezier(0.645, 0.045, 0.355, 1); /* power3.inOut */
+
+  /* Layering / Z-Index */
+  --z-canvas: 1;
+  --z-content: 10;
+  --z-hud: 100;
+  --z-modal: 1000;
+  --z-loader: 2000;
+  --z-toast: 3000;
+}
+
+/* Reset and base document styles */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+body {
+  min-height: 100vh;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Canvas container: Pinned full-screen behind DOM content */
+#webgl-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: var(--z-canvas);
+  pointer-events: none;
+}
+
+#webgl-container canvas {
+  pointer-events: auto;
+}
+
+/* Accessible focus ring */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

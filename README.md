@@ -205,6 +205,47 @@ This works because:
 
 ---
 
+## 3D Gamified Frontend (React 18 + R3F + Vite)
+
+LinkZip features a live, real-time 3D gamified frontend with 1.8s particle-to-voxel collapse animations, XP progression, streaks, and phone-scannable QR codes.
+
+### Setup & Development
+
+```bash
+# Install dependencies
+npm install
+
+# Start Vite dev server (port 3000)
+npm run dev
+
+# Run TypeScript strict typecheck
+npm run typecheck
+
+# Production build (creates dist/ with JS bundle <450KB gzip)
+npm run build
+
+# Run all test suites (roundtrip + extension + QR scanner + vitest phases)
+npm run test:all
+```
+
+### Environment Variables & Switching API Endpoints
+
+The frontend uses the adapter pattern in `src/api/adapter.ts`:
+
+| Variable | Default | Description |
+|---|---|---|
+| `VITE_API_BASE_URL` | `""` (empty) | Base URL for remote API backend. If left empty, LinkZip automatically runs in zero-backend **Offline Mode** using `localCompress.ts`. |
+
+To connect to a custom backend:
+1. Create a `.env` or `.env.local` file:
+   ```env
+   VITE_API_BASE_URL=https://api.yourdomain.com
+   ```
+2. Restart the dev server or run `npm run build`.
+3. If the remote endpoint is unreachable or times out (8s limit), LinkZip gracefully falls back to local in-browser compression without interrupting the user.
+
+---
+
 ## License
 
 MIT — see [LICENSE](./LICENSE).
