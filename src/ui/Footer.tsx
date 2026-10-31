@@ -66,6 +66,7 @@ export const Footer: React.FC = () => {
 
       {/* Link Columns */}
       <div
+        className="footer-links-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',

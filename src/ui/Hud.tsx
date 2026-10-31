@@ -107,6 +107,7 @@ export const Hud: React.FC = () => {
 
         {/* Compact Dropdown Trigger Pill */}
         <button
+          className="hud-trigger-btn"
           onClick={() => setIsOpen((prev) => !prev)}
           aria-haspopup="true"
           aria-expanded={isOpen}
@@ -132,12 +133,12 @@ export const Hud: React.FC = () => {
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <span>👤</span>
-            <span style={{ maxWidth: '70px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span className="hud-trigger-handle" style={{ maxWidth: '70px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {handle}
             </span>
           </span>
-          <span style={{ color: 'var(--color-accent)', fontWeight: 700 }}>LVL {level}</span>
-          <span style={{ color: 'var(--color-xp)', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+          <span className="hud-trigger-lvl" style={{ color: 'var(--color-accent)', fontWeight: 700 }}>LVL {level}</span>
+          <span className="hud-trigger-streak" style={{ color: 'var(--color-xp)', display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
             🔥 {streakDays}d
           </span>
           <span
@@ -154,10 +155,11 @@ export const Hud: React.FC = () => {
           </span>
         </button>
 
-        {/* Dropdown Menu Panel */}
+        {/* Dropdown Menu Panel (Desktop Dropdown / Mobile Bottom Sheet) */}
         {isOpen && (
           <div
             id="hud-dropdown-panel"
+            className="hud-dropdown-modal"
             role="region"
             aria-label="Player profile and game status details"
             style={{

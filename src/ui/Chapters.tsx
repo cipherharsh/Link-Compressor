@@ -114,6 +114,7 @@ export const Chapters: React.FC<ChaptersProps> = ({
 
       {/* Chapter 2: Compress / Pipeline */}
       <section
+        className="chapter-section"
         style={{
           minHeight: '100vh',
           display: 'flex',
@@ -164,6 +165,7 @@ export const Chapters: React.FC<ChaptersProps> = ({
 
           {/* 4 Sequential Stage Cards */}
           <div
+            className="pipeline-grid"
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
@@ -239,6 +241,7 @@ export const Chapters: React.FC<ChaptersProps> = ({
 
       {/* Chapter 3: Play / Playground Container */}
       <section
+        className="chapter-section"
         style={{
           minHeight: '100vh',
           display: 'flex',
@@ -255,6 +258,7 @@ export const Chapters: React.FC<ChaptersProps> = ({
 
       {/* Chapter 4: Join Container */}
       <section
+        className="chapter-section"
         style={{
           minHeight: '100vh',
           display: 'flex',

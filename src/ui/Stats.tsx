@@ -82,6 +82,7 @@ export const Stats: React.FC = () => {
       }}
     >
       <div
+        className="stats-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',

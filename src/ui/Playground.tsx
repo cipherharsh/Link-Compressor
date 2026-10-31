@@ -261,6 +261,7 @@ export const Playground: React.FC = () => {
 
   return (
     <div
+      className="playground-container"
       style={{
         width: '100%',
         maxWidth: '720px',
@@ -275,6 +276,7 @@ export const Playground: React.FC = () => {
     >
       {/* Tab Navigation */}
       <div
+        className="playground-tabs"
         style={{
           display: 'flex',
           gap: '8px',
@@ -293,6 +295,7 @@ export const Playground: React.FC = () => {
         ].map((tab) => (
           <button
             key={tab.id}
+            className="playground-tab-btn"
             role="tab"
             aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
@@ -332,7 +335,7 @@ export const Playground: React.FC = () => {
             >
               Paste Any Web URL
             </label>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div className="compress-input-group" style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <input
                 id="url-compress-input"
                 type="url"
@@ -507,7 +510,7 @@ export const Playground: React.FC = () => {
               </div>
 
               {/* Action Toolbar: Flatten Mode & QR Downloads */}
-              <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
+              <div className="compress-toolbar" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', borderTop: '1px solid var(--color-border)', paddingTop: '16px' }}>
                 <button
                   onClick={toggleFlattenQR}
                   style={{

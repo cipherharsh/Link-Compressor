@@ -81,7 +81,7 @@ export const App: React.FC = () => {
       </div>
 
       {/* Main DOM Layer */}
-      <header style={{
+      <header className="site-header" style={{
         position: 'fixed',
         top: 0,
         left: 0,
@@ -95,9 +95,9 @@ export const App: React.FC = () => {
         background: 'var(--color-surface-glass)',
         borderBottom: '1px solid var(--color-border)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span style={{ fontSize: '1.4rem' }}>🔗</span>
-          <span style={{
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '1.3rem' }}>🔗</span>
+          <span className="site-brand-text" style={{
             fontFamily: 'var(--font-display)',
             fontWeight: 700,
             fontSize: '1.25rem',
@@ -108,23 +108,24 @@ export const App: React.FC = () => {
           </span>
           {apiState.isOffline && (
             <span style={{
-              fontSize: 'var(--text-xs)',
+              fontSize: '10px',
               background: 'rgba(255, 209, 102, 0.15)',
               color: 'var(--color-xp)',
-              padding: '2px 8px',
+              padding: '2px 6px',
               borderRadius: 'var(--radius-pill)',
               border: '1px solid rgba(255, 209, 102, 0.3)',
               fontFamily: 'var(--font-mono)'
             }}>
-              Offline Mode
+              Offline
             </span>
           )}
           <div className="hide-on-mobile"><LiveCounterStrip /></div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <Hud />
           <button
+            className="menu-trigger-btn"
             onClick={() => setIsMenuOpen(true)}
             aria-label="Open navigation menu"
             style={{
