@@ -36,11 +36,11 @@ export const Hud: React.FC = () => {
   const { level, currentLevelXp, nextLevelXp } = calculateLevel(xp);
   const progressPercent = Math.min(100, Math.max(0, (currentLevelXp / Math.max(1, nextLevelXp)) * 100));
 
-  // Dismiss dropdown on click outside or Escape
+  // Dismiss dropdown on click/touch outside or Escape
   useEffect(() => {
     if (!isOpen) return;
 
-    const handleClickOutside = (e: MouseEvent) => {
+    const handlePointerDown = (e: MouseEvent | TouchEvent) => {
       if (isModalOpen) return;
       if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
         setIsOpen(false);
@@ -53,11 +53,13 @@ export const Hud: React.FC = () => {
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('mousedown', handlePointerDown);
+    document.addEventListener('touchstart', handlePointerDown, { passive: true });
     document.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handlePointerDown);
+      document.removeEventListener('touchstart', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, isModalOpen]);
@@ -157,56 +159,87 @@ export const Hud: React.FC = () => {
 
         {/* Dropdown Menu Panel (Desktop Dropdown / Mobile Bottom Sheet) */}
         {isOpen && (
-          <div
-            id="hud-dropdown-panel"
-            className="hud-dropdown-modal"
-            role="region"
-            aria-label="Player profile and game status details"
-            style={{
-              position: 'absolute',
-              top: 'calc(100% + 10px)',
-              right: 0,
-              width: '340px',
-              maxWidth: 'calc(100vw - 32px)',
-              background: 'rgba(20, 24, 33, 0.95)',
-              backdropFilter: 'blur(20px)',
-              WebkitBackdropFilter: 'blur(20px)',
-              border: '1px solid var(--color-border)',
-              borderRadius: 'var(--radius-card)',
-              padding: '14px 14px',
-              boxShadow: '0 16px 48px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.15)',
-              zIndex: 1000,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              animation: 'hudDropdownSlideIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards'
-            }}
-          >
-            {/* Top Row: Handle / Edit, Mute SFX, Flatten QR, Streak */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-              <button
-                ref={claimTriggerRef}
-                onClick={() => setIsModalOpen(true)}
-                title="Click to claim player handle"
-                style={{
-                  background: 'rgba(255, 255, 255, 0.05)',
-                  border: '1px solid var(--color-border)',
-                  borderRadius: 'var(--radius-pill)',
-                  color: 'var(--color-text)',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 'var(--text-small)',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '4px 10px',
-                  transition: 'border-color 0.2s ease'
-                }}
-              >
-                <span>👤 {handle}</span>
-                <span style={{ fontSize: '10px', color: 'var(--color-muted)' }}>✏️</span>
-              </button>
+          <>
+            {/* Mobile backdrop overlay */}
+            <div
+              className="hud-backdrop"
+              onClick={() => setIsOpen(false)}
+              aria-hidden="true"
+            />
+            <div
+              id="hud-dropdown-panel"
+              className="hud-dropdown-modal"
+              role="region"
+              aria-label="Player profile and game status details"
+              style={{
+                position: 'absolute',
+                top: 'calc(100% + 10px)',
+                right: 0,
+                width: '340px',
+                maxWidth: 'calc(100vw - 32px)',
+                background: 'rgba(20, 24, 33, 0.98)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid var(--color-border)',
+                borderRadius: 'var(--radius-card)',
+                padding: '14px 14px',
+                boxShadow: '0 16px 48px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.15)',
+                zIndex: 1000,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}
+            >
+              {/* Mobile handle indicator & Close button */}
+              <div className="hud-mobile-header" style={{ display: 'none', justifyContent: 'space-between', alignItems: 'center', paddingBottom: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '13px', fontFamily: 'var(--font-mono)', fontWeight: 700, color: 'var(--color-accent)' }}>
+                    Player Profile
+                  </span>
+                </div>
+                <button
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close Player HUD"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-pill)',
+                    color: 'var(--color-text)',
+                    fontSize: '11px',
+                    fontFamily: 'var(--font-mono)',
+                    padding: '4px 10px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  ✕ Close
+                </button>
+              </div>
+
+              {/* Top Row: Handle / Edit, Mute SFX, Flatten QR, Streak */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <button
+                  ref={claimTriggerRef}
+                  onClick={() => setIsModalOpen(true)}
+                  title="Click to claim player handle"
+                  style={{
+                    background: 'rgba(255, 255, 255, 0.05)',
+                    border: '1px solid var(--color-border)',
+                    borderRadius: 'var(--radius-pill)',
+                    color: 'var(--color-text)',
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 'var(--text-small)',
+                    fontWeight: 600,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '4px 10px',
+                    transition: 'border-color 0.2s ease'
+                  }}
+                >
+                  <span>👤 {handle}</span>
+                  <span style={{ fontSize: '10px', color: 'var(--color-muted)' }}>✏️</span>
+                </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 {/* Audio mute toggle */}
@@ -300,11 +333,12 @@ export const Hud: React.FC = () => {
               )}
             </div>
 
-            {/* Achievements Strip */}
-            <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '10px' }}>
-              <Achievements />
+              {/* Achievements Strip */}
+              <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '10px' }}>
+                <Achievements />
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
 
