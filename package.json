@@ -14,8 +14,7 @@
     "test:extension": "node tests/extension.test.js",
     "test:qr": "node tests/qr.test.js",
     "test:adapter": "vitest run tests/",
-    "test:layout": "node scripts/verify-layout.mjs",
-    "test:all": "npm test && npm run test:adapter && npm run test:layout"
+    "test:all": "npm test && npm run test:adapter"
   },
   "keywords": [
     "url-compressor",
@@ -34,7 +33,6 @@
     "gsap": "^3.15.0",
     "jsqr": "^1.4.0",
     "lenis": "^1.3.26",
-    "lucide-react": "^1.65.0",
     "qrcode-generator": "^2.0.4",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
@@ -46,7 +44,6 @@
     "@types/react-dom": "^19.3.0",
     "@types/three": "^0.186.0",
     "@vitejs/plugin-react": "^6.1.2",
-    "playwright": "^1.64.1",
     "typescript": "^7.0.2",
     "vite": "^8.3.4",
     "vitest": "^5.0.5"

@@ -11,18 +11,7 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: { main: path.resolve(import.meta.dirname, 'index.html') },
-      output: {
-        manualChunks(id) {
-          if (id.includes('node_modules/three')) {
-            return 'vendor-three';
-          }
-          if (id.includes('node_modules/lucide-react')) {
-            return 'vendor-icons';
-          }
-        }
-      }
     },
-    chunkSizeWarningLimit: 600
   },
   server: { port: 3000 },
   // @ts-expect-error - vitest config in vite config
