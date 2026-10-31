@@ -7,6 +7,7 @@
  */
 
 import React, { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { useGameStore, calculateLevel } from '../state/gameStore';
 import { useSceneStore } from '../state/sceneStore';
 import { getApiState } from '../api/adapter';
@@ -30,6 +31,7 @@ export const Hud: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
   const claimTriggerRef = useRef<HTMLButtonElement>(null);
 
   const apiState = getApiState();
@@ -40,11 +42,14 @@ export const Hud: React.FC = () => {
   useEffect(() => {
     if (!isOpen) return;
 
+    let timer: number;
     const handlePointerDown = (e: MouseEvent | TouchEvent) => {
       if (isModalOpen) return;
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setIsOpen(false);
-      }
+      const target = e.target as Node;
+      // If clicking inside trigger container or inside the modal panel, ignore
+      if (dropdownRef.current && dropdownRef.current.contains(target)) return;
+      if (panelRef.current && panelRef.current.contains(target)) return;
+      setIsOpen(false);
     };
 
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -53,11 +58,15 @@ export const Hud: React.FC = () => {
       }
     };
 
-    document.addEventListener('mousedown', handlePointerDown);
-    document.addEventListener('touchstart', handlePointerDown, { passive: true });
-    document.addEventListener('keydown', handleKeyDown);
+    // Attach with small delay to avoid processing the event that opened the dropdown
+    timer = window.setTimeout(() => {
+      document.addEventListener('mousedown', handlePointerDown);
+      document.addEventListener('touchstart', handlePointerDown, { passive: true });
+      document.addEventListener('keydown', handleKeyDown);
+    }, 50);
 
     return () => {
+      clearTimeout(timer);
       document.removeEventListener('mousedown', handlePointerDown);
       document.removeEventListener('touchstart', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
@@ -157,10 +166,10 @@ export const Hud: React.FC = () => {
           </span>
         </button>
 
-        {/* Dropdown Menu Panel (Desktop Dropdown / Mobile Bottom Sheet) */}
-        {isOpen && (
+        {/* Dropdown Menu Panel (Rendered into document.body via Portal to avoid stacking context & z-index issues) */}
+        {isOpen && typeof document !== 'undefined' && createPortal(
           <>
-            {/* Mobile backdrop overlay */}
+            {/* Backdrop overlay */}
             <div
               className="hud-backdrop"
               onClick={() => setIsOpen(false)}
@@ -168,13 +177,14 @@ export const Hud: React.FC = () => {
             />
             <div
               id="hud-dropdown-panel"
+              ref={panelRef}
               className="hud-dropdown-modal"
               role="region"
               aria-label="Player profile and game status details"
               style={{
-                position: 'absolute',
-                top: 'calc(100% + 10px)',
-                right: 0,
+                position: 'fixed',
+                top: dropdownRef.current ? Math.min(window.innerHeight - 200, dropdownRef.current.getBoundingClientRect().bottom + 8) : 60,
+                right: 16,
                 width: '340px',
                 maxWidth: 'calc(100vw - 32px)',
                 background: 'rgba(20, 24, 33, 0.98)',
@@ -184,7 +194,7 @@ export const Hud: React.FC = () => {
                 borderRadius: 'var(--radius-card)',
                 padding: '14px 14px',
                 boxShadow: '0 16px 48px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.15)',
-                zIndex: 1000,
+                zIndex: 9999,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '12px'
@@ -241,104 +251,105 @@ export const Hud: React.FC = () => {
                   <span style={{ fontSize: '10px', color: 'var(--color-muted)' }}>✏️</span>
                 </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                {/* Audio mute toggle */}
-                <button
-                  onClick={toggleMute}
-                  title={isMuted ? 'Unmute SFX' : 'Mute SFX'}
-                  aria-label={isMuted ? 'Unmute SFX' : 'Mute SFX'}
-                  style={{
-                    background: 'rgba(255, 255, 255, 0.05)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 'var(--radius-pill)',
-                    color: isMuted ? 'var(--color-muted)' : 'var(--color-accent)',
-                    fontSize: '12px',
-                    padding: '4px 8px',
-                    cursor: 'pointer'
-                  }}
-                >
-                  {isMuted ? '🔇' : '🔊'}
-                </button>
-
-                {/* Flatten QR toggle */}
-                {webglSupported && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {/* Audio mute toggle */}
                   <button
-                    onClick={toggleFlattenQR}
-                    title="Toggle top-down flat scan mode"
+                    onClick={toggleMute}
+                    title={isMuted ? 'Unmute SFX' : 'Mute SFX'}
+                    aria-label={isMuted ? 'Unmute SFX' : 'Mute SFX'}
                     style={{
-                      background: flattenQR ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.05)',
-                      color: flattenQR ? 'var(--color-bg)' : 'var(--color-text)',
+                      background: 'rgba(255, 255, 255, 0.05)',
                       border: '1px solid var(--color-border)',
                       borderRadius: 'var(--radius-pill)',
-                      fontFamily: 'var(--font-mono)',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      padding: '4px 10px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
+                      color: isMuted ? 'var(--color-muted)' : 'var(--color-accent)',
+                      fontSize: '12px',
+                      padding: '4px 8px',
+                      cursor: 'pointer'
                     }}
                   >
-                    {flattenQR ? '3D View' : 'Flatten QR'}
+                    {isMuted ? '🔇' : '🔊'}
                   </button>
-                )}
 
-                {/* Streak */}
-                <div
-                  title={`${streakDays} consecutive day streak`}
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 'var(--text-xs)',
-                    color: 'var(--color-xp)',
-                    background: 'rgba(255, 209, 102, 0.12)',
-                    padding: '3px 8px',
-                    borderRadius: 'var(--radius-pill)'
-                  }}
-                >
-                  🔥 {streakDays}d
+                  {/* Flatten QR toggle */}
+                  {webglSupported && (
+                    <button
+                      onClick={toggleFlattenQR}
+                      title="Toggle top-down flat scan mode"
+                      style={{
+                        background: flattenQR ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.05)',
+                        color: flattenQR ? 'var(--color-bg)' : 'var(--color-text)',
+                        border: '1px solid var(--color-border)',
+                        borderRadius: 'var(--radius-pill)',
+                        fontFamily: 'var(--font-mono)',
+                        fontSize: '11px',
+                        fontWeight: 600,
+                        padding: '4px 10px',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease'
+                      }}
+                    >
+                      {flattenQR ? '3D View' : 'Flatten QR'}
+                    </button>
+                  )}
+
+                  {/* Streak */}
+                  <div
+                    title={`${streakDays} consecutive day streak`}
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 'var(--text-xs)',
+                      color: 'var(--color-xp)',
+                      background: 'rgba(255, 209, 102, 0.12)',
+                      padding: '3px 8px',
+                      borderRadius: 'var(--radius-pill)'
+                    }}
+                  >
+                    🔥 {streakDays}d
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Level Progress Bar */}
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-mono)', fontSize: '11px', marginBottom: '4px' }}>
-                <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>LVL {level}</span>
-                <span style={{ color: 'var(--color-muted)' }}>{xp} XP ({progressPercent.toFixed(0)}%)</span>
-              </div>
-              <div
-                style={{
-                  width: '100%',
-                  height: '5px',
-                  background: 'rgba(255, 255, 255, 0.08)',
-                  borderRadius: 'var(--radius-pill)',
-                  overflow: 'hidden'
-                }}
-              >
+              {/* Level Progress Bar */}
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: 'var(--font-mono)', fontSize: '11px', marginBottom: '4px' }}>
+                  <span style={{ color: 'var(--color-accent)', fontWeight: 600 }}>LVL {level}</span>
+                  <span style={{ color: 'var(--color-muted)' }}>{xp} XP ({progressPercent.toFixed(0)}%)</span>
+                </div>
                 <div
                   style={{
-                    width: `${progressPercent}%`,
-                    height: '100%',
-                    background: 'linear-gradient(90deg, var(--color-accent), var(--color-accent-2))',
-                    transition: 'width 0.4s ease'
+                    width: '100%',
+                    height: '5px',
+                    background: 'rgba(255, 255, 255, 0.08)',
+                    borderRadius: 'var(--radius-pill)',
+                    overflow: 'hidden'
                   }}
-                />
+                >
+                  <div
+                    style={{
+                      width: `${progressPercent}%`,
+                      height: '100%',
+                      background: 'linear-gradient(90deg, var(--color-accent), var(--color-accent-2))',
+                      transition: 'width 0.4s ease'
+                    }}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Session Metrics & Offline Indicator */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>
-              <span>Saved: {bytesSavedSession} bytes</span>
-              {apiState.isOffline && (
-                <span style={{ color: 'var(--color-xp)' }}>⚡ Offline Engine</span>
-              )}
-            </div>
+              {/* Session Metrics & Offline Indicator */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', fontFamily: 'var(--font-mono)', color: 'var(--color-muted)' }}>
+                <span>Saved: {bytesSavedSession} bytes</span>
+                {apiState.isOffline && (
+                  <span style={{ color: 'var(--color-xp)' }}>⚡ Offline Engine</span>
+                )}
+              </div>
 
               {/* Achievements Strip */}
               <div style={{ borderTop: '1px solid var(--color-border)', paddingTop: '10px' }}>
                 <Achievements />
               </div>
             </div>
-          </>
+          </>,
+          document.body
         )}
       </div>
 
