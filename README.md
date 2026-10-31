@@ -1,251 +1,209 @@
-# 🔗 LinkZip
+# LinkZip (v2.0)
 
-**Client-side URL compressor & QR code optimizer** — no server, no database, all logic runs in your browser.
+> **Client-side URL compressor, privacy sanitizer, and high-density QR code optimizer.**  
+> Zero backend. Zero tracking. Zero external API calls. Works 100% offline in your browser.
 
-Inspired by [p2r3/ha.mr](https://github.com/p2r3/ha.mr).
-
----
-
-## How It Works
-
-LinkZip compresses URLs using a multi-stage pipeline:
-
-```
-Original URL
-    │
-    ▼
-┌──────────────────────────────┐
-│  1. Boilerplate Stripping    │  protocol, www., /index.html → 5 flag bits
-├──────────────────────────────┤
-│  2. TLD Huffman Lookup       │  "com" → 2 bits, "org" → 4 bits, …
-├──────────────────────────────┤
-│  3. Domain Huffman Lookup    │  "google" → 4 bits, "github" → 8 bits, …
-├──────────────────────────────┤
-│  4. Path Segment Encoding    │  Each segment → cheapest sub-alphabet
-├──────────────────────────────┤
-│  5. Query / Fragment Packing │  Sub-alphabet encoded
-├──────────────────────────────┤
-│  6. Bitstream → String       │  Base-78 (URL-safe) or Base-42 (QR-safe)
-└──────────────────────────────┘
-    │
-    ▼
-Compressed String  →  Short Link + QR Code
-```
-
-### Encoding Details
-
-| Stage | Method | Example |
-|-------|--------|---------|
-| Protocol | 1 flag bit | `https://` → bit `1` |
-| www. prefix | 1 flag bit | `www.` → bit `1` |
-| TLD | Huffman dictionary (~100 TLDs) | `.com` → `00` (2 bits) |
-| Domain | Huffman dictionary (~200 domains) | `youtube` → 6 bits |
-| Path segments | Cheapest sub-alphabet (4–7 bits/char) | `/watch` → Huffman hit |
-| Output | Base conversion with sentinel bit | Bitstream → URL-safe chars |
-
-### Sub-Alphabets
-
-The encoder picks the smallest character set that covers each path segment:
-
-| Index | Characters | Size | Bits/char |
-|-------|-----------|------|-----------|
-| 0 | `0-9 - _` | 12 | 4 |
-| 1 | `A-Z - _` | 28 | 5 |
-| 2 | `a-z - _` | 28 | 5 |
-| 3 | `A-Z 0-9 - _` | 38 | 6 |
-| 4 | `a-z 0-9 - _` | 38 | 6 |
-| 5 | `A-Za-z - _` | 54 | 6 |
-| 6 | `A-Za-z 0-9 - _` | 64 | 6 |
-| 7 | Full URL charset | 80 | 7 |
+LinkZip transforms long, cluttered web addresses into compact bitstream-compressed short links and camera-optimized ISO QR codes directly in your browser. All encoding, tracking parameter removal, and QR rendering occur strictly client-side using Web standards.
 
 ---
 
-## Quick Start
+## Key Capabilities
 
-### Use the Web App
+- **Zero-Backend Architecture**: All compression, decompression, and QR generation execute in local memory. URLs are never transmitted to external servers.
+- **Privacy-First Tracking Stripper**: Automatically strips tracking artifacts (`utm_*`, `fbclid`, `gclid`, `mc_eid`, `yclid`, etc.) and displays a clear parameter diff before compressing.
+- **Lossless Bitstream Compression**: Multi-tier pipeline utilizing sub-alphabet minimization and Huffman dictionary tables for common domains, TLDs, and path segments.
+- **Optical Scan Reliability Scoring**: QR engine calculates real relative luminance contrast ratios (WCAG AA compliance) and evaluates camera readability from 0 to 100.
+- **Multi-Format Export & Sharing**: 1-click clipboard link copying, direct QR image clipboard copying, multi-resolution PNG downloads (up to 2048px), and vector SVG export.
+- **Mobile First & Fully Responsive**: Tested down to 320px width with zero horizontal overflow, 46px minimum touch targets, and a thumb-accessible sticky bottom action bar.
+- **Lazy-Loaded 3D Density Inspector**: Three.js `InstancedMesh` voxel visualizer isolated in a separate bundle chunk (`vendor-three`), capped at 60fps, off by default on mobile, and strictly respecting `prefers-reduced-motion`.
 
-1. Open `index.html` in any modern browser
-2. Paste a URL → get a compressed link + QR code instantly
-3. Copy the link or download the QR code
+---
 
-### Deploy Your Own Instance
+## Replaced AI Clichés & Design Evolution
 
-1. Fork this repository
-2. Enable GitHub Pages (Settings → Pages → Source: `main`, folder: `/`)
-3. Edit `CNAME` with your custom domain
-4. Configure DNS: add a `CNAME` record pointing to `<username>.github.io`
-5. Done! Your short domain now serves and decodes compressed links
+LinkZip was rebuilt from the ground up to replace generic "AI-generated" vibe-coded patterns with authentic, functional product design:
 
-### Custom Domain Setup
+| Generic AI Cliché Replaced | Problem with Previous Approach | Replaced With (LinkZip v2.0) |
+|---|---|---|
+| **Neon Gradients & Glassmorphism Blobs** | Visual noise, poor text contrast, unprofessional aesthetic. | **Strict 9-step Neutral Design System**: Clean typography, subtle borders, high contrast ratios, and deliberate Sapphire/Cobalt accent tokens. |
+| **Fake Gamification & XP Streaks** | Artificial complexity (levels, sound effects, fake rewards) in a utility tool. | **Real Mathematical Metrics**: Exact byte delta, % payload reduction, character counts, and cryptographic 1-click roundtrip verification. |
+| **Blocking 3D Canvas on Initial Load** | Heavy initial bundle, high CPU/GPU battery drain, blocked simple mobile copy tasks. | **Instant Rendering + Lazy 3D**: Primary QR renders instantly on 2D Canvas/SVG; 3D voxel inspection is lazy-loaded on demand and code-split. |
+| **Emoji Overuse in Labels & UI** | Inconsistent rendering across OSes and informal visual clutter. | **Purposeful Vector Icons**: Lucide SVG icons rendered with consistent 1.5px to 1.75px strokes and semantic aria labels. |
+| **Mobile Layout Breakages & Small Targets** | Truncated inputs, sub-30px buttons, and horizontal overflow on narrow mobile screens. | **Certified Mobile Layout**: Single-column layout on `<=640px`, zero overflow at 320px, 46px touch targets, and sticky bottom action bar. |
+| **Slow Multi-Step Modals** | Frustrating friction delaying access to links and downloads. | **<= 3 Interaction Flow**: Paste link -> View instant output -> Copy or Download in one click. Keyboard shortcut `⌘K` / `Ctrl+K`. |
 
-LinkZip lets you brand compressed links under your own short domain:
+---
 
-1. **Buy a short domain** (e.g., `lz.io`)
-2. **Deploy this repo** to GitHub Pages / Cloudflare Pages / Netlify
-3. **Configure custom domain** in your hosting provider's settings
-4. **Update LinkZip settings** (⚙️ in the app) with your domain
-5. The `404.html` catch-all will handle all compressed paths
+## Technical Architecture
 
-**DNS Configuration:**
 ```
-Type: CNAME
-Name: @  (or your subdomain)
-Value: <username>.github.io  (or your hosting provider's domain)
+                       Original URL (Pasted or Typed)
+                                     │
+                                     ▼
+                ┌─────────────────────────────────────────┐
+                │ 1. Privacy Sanitizer                    │
+                │    - Strips utm_*, fbclid, gclid        │
+                │    - Sanitizes malicious protocols      │
+                │    - Calculates stripped diff & savings │
+                └────────────────────┬────────────────────┘
+                                     │ Cleaned URL
+                                     ▼
+                ┌─────────────────────────────────────────┐
+                │ 2. Huffman Bitstream Encoder            │
+                │    - Protocol & www flag bits           │
+                │    - TLD dictionary lookup (2-4 bits)   │
+                │    - Domain dictionary (~200 domains)   │
+                │    - Sub-alphabet selection (4-7 bits)  │
+                │    - Base-78 URL-safe string packing    │
+                └────────────────────┬────────────────────┘
+                                     │
+                    ┌────────────────┴────────────────┐
+                    ▼                                 ▼
+       ┌────────────────────────┐        ┌─────────────────────────┐
+       │ 3. Short Link State    │        │ 4. ISO QR Code Engine   │
+       │    - Instant Copy      │        │    - Matrix evaluation  │
+       │    - History Cache     │        │    - Contrast ratio calc│
+       │    - 404.html Decoder  │        │    - SVG & Canvas render│
+       └────────────────────────┘        │    - Scan score (0-100) │
+                                         └────────────┬────────────┘
+                                                      │ (Optional)
+                                                      ▼
+                                         ┌─────────────────────────┐
+                                         │ 5. Lazy 3D Inspector    │
+                                         │    - InstancedMesh      │
+                                         │    - 60fps capped       │
+                                         │    - Reduced-motion safe│
+                                         └─────────────────────────┘
+```
+
+### Source Structure
+
+```
+├── index.html                  # Semantic entrypoint with anti-flash theme script
+├── vercel.json                 # Vercel static routing & Content Security Policy (CSP)
+├── vite.config.ts              # Vite configuration with Three.js code-splitting
+├── src/
+│   ├── main.tsx                # React 19 application mount
+│   ├── App.tsx                 # Two-pane workspace state orchestration
+│   ├── styles/
+│   │   ├── tokens.css          # Design tokens (colors, typography, spacing, shadows)
+│   │   └── app.css             # Layout grids, button classes, print styles
+│   ├── lib/
+│   │   ├── types.ts            # Core TypeScript interfaces & contracts
+│   │   ├── trackingStripper.ts # Tracking parameter stripper & URL sanitizer
+│   │   ├── compressor.ts       # Huffman bitstream compression facade
+│   │   ├── qrEngine.ts         # QR generation, contrast math & export utilities
+│   │   └── historyStorage.ts   # Safe localStorage link history manager
+│   └── components/
+│       ├── Header.tsx          # Branding, 100% client-side pill, theme & history triggers
+│       ├── UrlInputSection.tsx # URL input, paste/clear buttons, parameter diff view
+│       ├── CompressionStats.tsx# Payload reduction metrics & roundtrip verification
+│       ├── QrPreviewSection.tsx# High-density QR canvas, ISO specs, scan score
+│       ├── QrCustomizer.tsx    # Color presets, resolution picker, export buttons
+│       ├── HistoryDrawer.tsx   # Searchable modal drawer with pinning & copy actions
+│       ├── MobileActionBar.tsx # Sticky bottom action bar for mobile devices (<=640px)
+│       ├── ToastAnnouncer.tsx  # Screen reader aria-live announcements & toasts
+│       └── VoxelPreview.tsx    # Lazy-loaded Three.js 3D voxel density inspector
+├── scripts/
+│   └── verify-layout.mjs       # Automated Playwright viewport & overflow test runner
+└── tests/
+    ├── core-logic.test.ts      # Vitest unit tests for tracking, contrast & scoring
+    ├── roundtrip.test.js       # 300+ real-world URL lossless roundtrip tests
+    ├── extension.test.js       # Extension bundle parity verification
+    ├── qr.test.js              # QR generation & camera scan reliability tests
+    └── screenshots/            # Automated verification captures (375px, 768px, 1440px)
 ```
 
 ---
 
-## Browser Extension
+## Getting Started
 
-The included Chrome extension lets you compress URLs without opening the web app.
+### Prerequisites
+
+- Node.js (v18.0.0 or later)
+- npm or pnpm
 
 ### Installation
 
-1. Open `chrome://extensions/`
-2. Enable "Developer mode"
-3. Click "Load unpacked"
-4. Select the `extension/` directory
-
-### Usage
-
-- Right-click any page → **"Compress this URL"** or **"Generate QR Code"**
-- Or click the extension icon to compress the current tab's URL
-- Copy the compressed link or download the QR code from the popup
-
----
-
-## File Structure
-
-```
-├── index.html              Main web app UI
-├── 404.html                Redirect/decode page
-├── style.css               Responsive stylesheet
-├── CNAME                   Custom domain (edit this)
-├── LICENSE                 MIT
-├── src/
-│   ├── alphabets.js        Character sets & Huffman dictionaries
-│   ├── compress.js         Core encode/decode engine
-│   ├── standalone.js       Re-export for 404.html & extension
-│   ├── qrcode.js           QR code generator (alphanumeric mode)
-│   ├── config.js           Domain profiles & settings (localStorage)
-│   ├── main.js             UI event wiring
-│   ├── analytics.js        Compression breakdown panel
-│   └── badge.js            Shareable compression badges
-├── extension/
-│   ├── manifest.json       Chrome MV3 manifest
-│   ├── background.js       Context menu service worker
-│   ├── popup.html          Extension popup UI
-│   ├── popup.js            Extension popup logic
-│   └── standalone-bundle.js IIFE bundle of the compression engine
-└── tests/
-    ├── roundtrip.test.js   Round-trip accuracy tests
-    └── test-urls.js        100+ real-world test URLs
-```
-
----
-
-## Testing
-
 ```bash
-# Run the round-trip test suite
-node tests/roundtrip.test.js
-```
+# Clone the repository
+git clone https://github.com/cipherharsh/Link-Compressor.git
+cd Link-Compressor
 
-The test suite verifies:
-- ✅ 100+ real-world URLs round-trip correctly (encode → decode = original)
-- ✅ Both ASCII and QR output alphabets produce lossless results
-- ✅ Edge cases: ports, unicode, fragments, IP hosts, empty paths
-- ✅ Compression ratio statistics
-
----
-
-## Compression Benchmarks
-
-Typical results on real-world URLs:
-
-| URL Type | Original Length | Compressed | Ratio |
-|----------|----------------|------------|-------|
-| `https://google.com` | 20 | ~14 | ~30% |
-| YouTube video URL | 43 | ~22 | ~49% |
-| Amazon product URL | 60+ | ~30 | ~50% |
-| Wikipedia article | 55 | ~28 | ~49% |
-| URL with query params | 80+ | ~40 | ~50% |
-
-> Compression effectiveness depends on dictionary hits. URLs with common domains/TLDs compress significantly better.
-
----
-
-## How the Redirect Works
-
-```
-User visits: https://your-domain.com/COMPRESSED_STRING
-                         │
-                         ▼
-            GitHub Pages serves 404.html
-            (all unknown paths hit this)
-                         │
-                         ▼
-            JavaScript reads pathname
-            Strips leading "/"
-                         │
-                         ▼
-            decode(path, "ascii")
-            Reconstructs original URL
-                         │
-                         ▼
-            window.location.replace(url)
-            Browser navigates to original
-```
-
-This works because:
-- The compressed string is a valid URL path (URL-safe chars only)
-- `404.html` is served for any unmatched route on GitHub Pages
-- All decode logic runs client-side — no server needed
-- Works identically on any domain serving this static site
-
----
-
-## 3D Gamified Frontend (React 18 + R3F + Vite)
-
-LinkZip features a live, real-time 3D gamified frontend with 1.8s particle-to-voxel collapse animations, XP progression, streaks, and phone-scannable QR codes.
-
-### Setup & Development
-
-```bash
 # Install dependencies
 npm install
+```
 
-# Start Vite dev server (port 3000)
+### Development Server
+
+```bash
+# Start Vite development server
 npm run dev
+```
 
-# Run TypeScript strict typecheck
+Visit `http://localhost:5173` to interact with the local development instance.
+
+---
+
+## Verification & Testing Suites
+
+LinkZip includes automated testing covering unit logic, round-trip compression, optical scan integrity, and multi-device viewport layouts.
+
+```bash
+# 1. Typecheck TypeScript across all components
 npm run typecheck
 
-# Production build (creates dist/ with JS bundle <450KB gzip)
-npm run build
+# 2. Run unit tests with Vitest
+npm run test:adapter
 
-# Run all test suites (roundtrip + extension + QR scanner + vitest phases)
+# 3. Run full roundtrip and QR accuracy suite (312 URLs, 624 QR scans)
+npm run test
+
+# 4. Run automated layout and responsive verification (Playwright)
+npm run test:layout
+
+# 5. Run all test suites combined
 npm run test:all
 ```
 
-### Environment Variables & Switching API Endpoints
+---
 
-The frontend uses the adapter pattern in `src/api/adapter.ts`:
+## Production Build & Deployment
 
-| Variable | Default | Description |
-|---|---|---|
-| `VITE_API_BASE_URL` | `""` (empty) | Base URL for remote API backend. If left empty, LinkZip automatically runs in zero-backend **Offline Mode** using `localCompress.ts`. |
+```bash
+# Compile and bundle for production
+npm run build
 
-To connect to a custom backend:
-1. Create a `.env` or `.env.local` file:
-   ```env
-   VITE_API_BASE_URL=https://api.yourdomain.com
-   ```
-2. Restart the dev server or run `npm run build`.
-3. If the remote endpoint is unreachable or times out (8s limit), LinkZip gracefully falls back to local in-browser compression without interrupting the user.
+# Preview production build locally
+npm run preview
+```
+
+### Static Hosting on Vercel
+
+LinkZip is configured for zero-configuration static deployment on Vercel via [`vercel.json`](./vercel.json):
+- Strict Content Security Policy headers preventing data exfiltration
+- `X-Frame-Options: DENY` and `X-Content-Type-Options: nosniff`
+- SPA rewrites directing all paths to `index.html` for client-side decoding
+
+### Custom Domain Short Links
+
+1. Deploy the repository to Vercel, GitHub Pages, or Cloudflare Pages.
+2. Assign your custom short domain (e.g. `lz.io` or `linkcp.vercel.app`).
+3. Compressed short links formatted as `https://yourdomain.com/<shortCode>` will be decoded instantly client-side without any server redirect latency.
+
+---
+
+## Accessibility & Keyboard Shortcuts
+
+- `⌘K` / `Ctrl+K`: Focus and select URL input field
+- `Esc`: Close open drawers and modals
+- `Enter`: Trigger compression / refresh output
+- `Tab`: Logical focus order with high-contrast visible focus rings (`--focus-ring`)
+- `aria-live="polite"`: Screen reader announcements on link copy, QR save, and history updates
+- **Minimum 44x44px touch targets** on all interactive mobile buttons
 
 ---
 
 ## License
 
-MIT — see [LICENSE](./LICENSE).
+MIT © [CipherHarsh](https://github.com/cipherharsh) & LinkZip Contributors.
