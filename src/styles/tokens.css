@@ -129,3 +129,22 @@ body {
     scroll-behavior: auto !important;
   }
 }
+
+/* Mobile-first responsive overrides */
+@media (max-width: 640px) {
+  :root {
+    --text-display: clamp(2.2rem, 10vw, 4rem);
+    --text-h1: clamp(1.6rem, 5vw, 2.5rem);
+    --text-h2: clamp(1.3rem, 4vw, 1.8rem);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(8px); }
+}

@@ -67,7 +67,7 @@ export const Hero: React.FC<{ onScrollExplore?: () => void }> = ({ onScrollExplo
         flexDirection: 'column',
         justifyContent: 'center',
         alignItems: 'center',
-        padding: '120px 24px 60px 24px',
+        padding: '100px 16px 40px 16px',
         textAlign: 'center',
         position: 'relative'
       }}
@@ -107,14 +107,14 @@ export const Hero: React.FC<{ onScrollExplore?: () => void }> = ({ onScrollExplo
         onMouseLeave={() => setIsHovered(false)}
         style={{
           width: '100%',
-          maxWidth: '460px',
+          maxWidth: '420px',
           background: 'var(--color-surface-glass)',
           backdropFilter: 'blur(16px)',
           border: '1px solid var(--color-border)',
           borderRadius: 'var(--radius-card)',
-          padding: '24px 28px',
+          padding: '20px 20px',
           boxShadow: '0 16px 40px rgba(0, 0, 0, 0.4)',
-          marginBottom: '54px',
+          marginBottom: '36px',
           textAlign: 'left',
           transition: 'border-color 0.3s ease, transform 0.2s ease',
           borderColor: isHovered ? activeCard.accent : 'var(--color-border)'

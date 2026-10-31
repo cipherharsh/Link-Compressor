@@ -132,7 +132,7 @@ export const Hud: React.FC = () => {
         >
           <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
             <span>👤</span>
-            <span style={{ maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ maxWidth: '70px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {handle}
             </span>
           </span>
@@ -164,14 +164,14 @@ export const Hud: React.FC = () => {
               position: 'absolute',
               top: 'calc(100% + 10px)',
               right: 0,
-              width: '380px',
+              width: '340px',
               maxWidth: 'calc(100vw - 32px)',
               background: 'rgba(20, 24, 33, 0.95)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
               border: '1px solid var(--color-border)',
               borderRadius: 'var(--radius-card)',
-              padding: '16px 18px',
+              padding: '14px 14px',
               boxShadow: '0 16px 48px rgba(0, 0, 0, 0.65), 0 0 1px rgba(255, 255, 255, 0.15)',
               zIndex: 1000,
               display: 'flex',
@@ -181,7 +181,7 @@ export const Hud: React.FC = () => {
             }}
           >
             {/* Top Row: Handle / Edit, Mute SFX, Flatten QR, Streak */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
               <button
                 ref={claimTriggerRef}
                 onClick={() => setIsModalOpen(true)}

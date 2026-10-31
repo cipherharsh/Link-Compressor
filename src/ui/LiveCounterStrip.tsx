@@ -80,8 +80,10 @@ export const LiveCounterStrip: React.FC = () => {
           aria-live="polite"
           style={{
             position: 'fixed',
-            bottom: '24px',
-            right: '24px',
+            bottom: '60px',
+            right: '12px',
+            left: 'auto',
+            maxWidth: 'calc(100vw - 24px)',
             zIndex: 'var(--z-toast)' as unknown as number,
             background: 'var(--color-surface)',
             border: '1px solid var(--color-accent)',

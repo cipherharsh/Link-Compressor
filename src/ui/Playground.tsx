@@ -268,7 +268,7 @@ export const Playground: React.FC = () => {
         backdropFilter: 'blur(20px)',
         border: '1px solid var(--color-border)',
         borderRadius: 'var(--radius-card)',
-        padding: '32px',
+        padding: 'clamp(16px, 4vw, 32px)',
         boxShadow: '0 20px 60px rgba(0, 0, 0, 0.5)',
         textAlign: 'left'
       }}
@@ -297,14 +297,14 @@ export const Playground: React.FC = () => {
             aria-selected={activeTab === tab.id}
             onClick={() => setActiveTab(tab.id as typeof activeTab)}
             style={{
-              padding: '8px 16px',
+              padding: '6px 12px',
               borderRadius: 'var(--radius-pill)',
               background: activeTab === tab.id ? 'var(--color-accent)' : 'rgba(255, 255, 255, 0.04)',
               color: activeTab === tab.id ? 'var(--color-bg)' : 'var(--color-muted)',
               border: 'none',
               fontFamily: 'var(--font-mono)',
               fontWeight: 600,
-              fontSize: 'var(--text-small)',
+              fontSize: '12px',
               cursor: 'pointer',
               transition: 'all 0.2s ease',
               whiteSpace: 'nowrap'
@@ -493,7 +493,8 @@ export const Playground: React.FC = () => {
               <div
                 style={{
                   display: 'flex',
-                  gap: '20px',
+                  flexWrap: 'wrap',
+                  gap: '12px',
                   fontFamily: 'var(--font-mono)',
                   fontSize: 'var(--text-xs)',
                   color: 'var(--color-muted)',
@@ -786,7 +787,7 @@ export const Playground: React.FC = () => {
           {/* Active Game Sprint View */}
           {rushActive && (
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'var(--font-mono)', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: 'var(--font-mono)', fontSize: '12px', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
                 <span
                   style={{
                     color: rushTimeLeft < 10 ? 'var(--color-danger)' : 'var(--color-xp)',

@@ -90,7 +90,7 @@ export const MenuOverlay: React.FC<MenuOverlayProps> = ({
         display: 'flex',
         flexDirection: 'column',
         justifyContent: 'space-between',
-        padding: '36px 48px'
+        padding: 'clamp(20px, 5vw, 36px) clamp(16px, 5vw, 48px)'
       }}
       role="dialog"
       aria-modal="true"

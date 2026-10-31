@@ -90,7 +90,7 @@ export const App: React.FC = () => {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center',
-        padding: '16px 24px',
+        padding: '12px 16px',
         backdropFilter: 'blur(12px)',
         background: 'var(--color-surface-glass)',
         borderBottom: '1px solid var(--color-border)'
@@ -119,7 +119,7 @@ export const App: React.FC = () => {
               Offline Mode
             </span>
           )}
-          <LiveCounterStrip />
+          <div className="hide-on-mobile"><LiveCounterStrip /></div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -158,14 +158,14 @@ export const App: React.FC = () => {
       {/* Narrative Progress Indicator */}
       <div style={{
         position: 'fixed',
-        bottom: '24px',
-        left: '24px',
+        bottom: '16px',
+        left: '12px',
         zIndex: 'var(--z-hud)' as unknown as number,
         fontFamily: 'var(--font-mono)',
-        fontSize: 'var(--text-small)',
+        fontSize: 'var(--text-xs)',
         color: 'var(--color-muted)',
         background: 'var(--color-surface-glass)',
-        padding: '6px 14px',
+        padding: '4px 10px',
         borderRadius: 'var(--radius-pill)',
         border: '1px solid var(--color-border)'
       }}>
@@ -176,7 +176,7 @@ export const App: React.FC = () => {
       <main style={{ position: 'relative', zIndex: 'var(--z-content)' as unknown as number }}>
         <Chapters
           childrenChapter3={
-            <div style={{ width: '100%', maxWidth: '800px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '24px' }}>
+            <div style={{ width: '100%', maxWidth: '720px', margin: '0 auto', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
               {!webglSupported && <Fallback2D />}
               <Playground />
             </div>
@@ -191,6 +191,11 @@ export const App: React.FC = () => {
           }
         />
       </main>
+      <style>{`
+        @media (max-width: 640px) {
+          .hide-on-mobile { display: none !important; }
+        }
+      `}</style>
     </div>
   );
 };
