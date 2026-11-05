@@ -4,6 +4,7 @@ import { generateQR, renderToCanvas, renderToSVG, downloadPNG, downloadSVG } fro
 import { useGameStore } from '../state/gameStore';
 import { useThemeStore } from '../state/themeStore';
 import { copyText, canShare, shareLink } from './shareActions';
+import { useDialogFocus } from './useDialogFocus';
 
 /** QR "ink": the theme's darkest colour. Always drawn on white for reliable scanning. */
 export const QR_INK = { dark: '#06110C', light: '#08098B' } as const;
@@ -61,39 +62,7 @@ const QrModal: React.FC<QrModalProps> = ({ isOpen, onClose, qrPayload, displayUr
     if (isOpen) recordScanReady();
   }, [isOpen, recordScanReady]);
 
-  // Focus management: focus Close on open, trap Tab, close on Escape, restore focus after.
-  useEffect(() => {
-    if (!isOpen) return;
-    const previouslyFocused = document.activeElement as HTMLElement | null;
-    const focusTimer = window.setTimeout(() => closeRef.current?.focus(), 30);
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-        return;
-      }
-      if (e.key === 'Tab' && dialogRef.current) {
-        const focusables = dialogRef.current.querySelectorAll<HTMLElement>('button, [href]');
-        if (focusables.length === 0) return;
-        const first = focusables[0];
-        const last = focusables[focusables.length - 1];
-        if (e.shiftKey && document.activeElement === first) {
-          last.focus();
-          e.preventDefault();
-        } else if (!e.shiftKey && document.activeElement === last) {
-          first.focus();
-          e.preventDefault();
-        }
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => {
-      clearTimeout(focusTimer);
-      window.removeEventListener('keydown', handleKeyDown);
-      previouslyFocused?.focus();
-    };
-  }, [isOpen, onClose]);
+  useDialogFocus(isOpen, dialogRef, closeRef, onClose);
 
   useEffect(() => {
     if (!isOpen) setCopyState('idle');

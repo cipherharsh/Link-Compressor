@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { useSceneStore } from './state/sceneStore';
 import { useThemeStore } from './state/themeStore';
 import { localDecompress } from './engine/localCompress';
 import Loader from './ui/Loader';
 import Fallback2D from './ui/Fallback2D';
-import Scene from './scene/Scene';
+import SceneBoundary from './scene/SceneBoundary';
 import Chapters from './ui/Chapters';
 import Hud from './ui/Hud';
 import Playground from './ui/Playground';
@@ -13,6 +13,10 @@ import { Faq } from './ui/Faq';
 import { MenuOverlay } from './ui/MenuOverlay';
 import Footer from './ui/Footer';
 import LiveCounterStrip from './ui/LiveCounterStrip';
+import SettingsModal from './ui/SettingsModal';
+
+// three.js, R3F, drei, and postprocessing are most of the bundle; load them separately.
+const Scene = lazy(() => import('./scene/Scene'));
 
 // Labels for the progress indicator, matching the on-page section order.
 const CHAPTER_LABELS = ['', 'Compress', 'Overview', 'Pipeline', 'Join'];
@@ -53,11 +57,27 @@ export const App: React.FC = () => {
   const scrollProgress = useSceneStore((s) => s.scrollProgress);
   const webglSupported = useSceneStore((s) => s.webglSupported);
   const loaderFinished = useSceneStore((s) => s.loaderFinished);
+  const setCapability = useSceneStore((s) => s.setCapability);
+
+  // Start downloading the 3D scene only once the browser is idle, so the
+  // compressor is interactive first on slow connections and phones.
+  const [load3D, setLoad3D] = useState(false);
+  useEffect(() => {
+    const start = () => setLoad3D(true);
+    // Safari has no requestIdleCallback; fall back to a short timeout there.
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(start, { timeout: 1500 });
+      return () => window.cancelIdleCallback(id);
+    }
+    const timer = window.setTimeout(start, 300);
+    return () => clearTimeout(timer);
+  }, []);
 
   const theme = useThemeStore((s) => s.theme);
   const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const isHeaderSolid = scrollProgress > 0.02;
 
   // If the app was loaded via a compressed short link, decode it and redirect.
@@ -86,7 +106,13 @@ export const App: React.FC = () => {
       {!loaderFinished && <Loader />}
 
       <div id="webgl-container" aria-hidden="true">
-        {webglSupported && <Scene />}
+        {webglSupported && load3D && (
+          <SceneBoundary onError={() => setCapability(false, 'Not supported WebGL')}>
+            <Suspense fallback={null}>
+              <Scene />
+            </Suspense>
+          </SceneBoundary>
+        )}
       </div>
 
       <header className={`site-header${isHeaderSolid ? ' is-scrolled' : ''}`}>
@@ -123,7 +149,10 @@ export const App: React.FC = () => {
         isOpen={isMenuOpen}
         onClose={() => setIsMenuOpen(false)}
         onNavigate={scrollToSection}
+        onOpenSettings={() => setIsSettingsOpen(true)}
       />
+
+      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
 
       <div className="chapter-progress">
         Chapter {currentChapter} / 4 — <strong>{CHAPTER_LABELS[currentChapter]}</strong>

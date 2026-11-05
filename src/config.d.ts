@@ -14,6 +14,8 @@ export function detectCurrentDomain(): string;
 export function getDefaultDomain(): string;
 export function getDomain(): string;
 export function setDomain(domain: string): void;
+export function clearDomain(): void;
+export function hasCustomDomain(): boolean;
 export function getDomainProfiles(): DomainProfile[];
 export function addDomainProfile(name: string, domain: string): DomainProfile[];
 export function removeDomainProfile(domain: string): DomainProfile[];

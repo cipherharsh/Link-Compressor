@@ -5,6 +5,7 @@ interface MenuOverlayProps {
   onClose: () => void;
   triggerRef?: React.RefObject<HTMLElement | null>;
   onNavigate?: (section: string) => void;
+  onOpenSettings?: () => void;
 }
 
 const MENU_LINKS = [
@@ -15,7 +16,7 @@ const MENU_LINKS = [
   { label: 'Contact & Support', target: 'contact' },
 ];
 
-export const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, triggerRef, onNavigate }) => {
+export const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, triggerRef, onNavigate, onOpenSettings }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const firstLinkRef = useRef<HTMLButtonElement>(null);
 
@@ -95,6 +96,17 @@ export const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, trigg
             {link.label}
           </button>
         ))}
+        {onOpenSettings && (
+          <button
+            className="menu-settings"
+            onClick={() => {
+              onClose();
+              onOpenSettings();
+            }}
+          >
+            ⚙ Short-link domain settings
+          </button>
+        )}
       </nav>
 
       <div className="menu-overlay__foot">

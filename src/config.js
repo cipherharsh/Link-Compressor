@@ -55,6 +55,19 @@ export function setDomain(domain) {
   set("active_domain", domain.replace(/\/+$/, "").trim());
 }
 
+/** Forget the saved domain so short links use whatever site is serving the app. */
+export function clearDomain() {
+  try {
+    if (typeof localStorage !== "undefined") localStorage.removeItem(STORAGE_PREFIX + "active_domain");
+  } catch {}
+}
+
+/** True when a saved domain overrides the current site. */
+export function hasCustomDomain() {
+  const saved = get("active_domain", null);
+  return Boolean(saved) && saved !== FALLBACK_DOMAIN && saved !== detectCurrentDomain();
+}
+
 // ── Domain profiles ──────────────────────────────────────────────────────────
 
 export function getDomainProfiles() {

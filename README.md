@@ -113,8 +113,20 @@ To serve LinkZip from your own domain (e.g., `lz.io`):
    `CNAME` record to `<username>.github.io`).
 2. Add the domain in your host's settings (for GitHub Pages, **Settings → Pages**).
 3. A custom domain serves from the root, so build with `BASE_PATH=/` (on GitHub
-   Pages, change it in the workflow).
+   Pages, change it in the workflow, along with `SITE_URL`).
 4. The `404.html` catch-all then handles all compressed paths on your domain.
+
+Short links use the domain the site is served from by default. To point new links
+at a different domain that also serves LinkZip, open **Menu → Short-link domain
+settings** in the app; **Use this site** switches back.
+
+### Link Previews and Icons
+
+`public/` holds the favicon (`favicon.svg`), the iOS home-screen icon
+(`apple-touch-icon.png`), and the 1200×630 link-preview card (`og-image.png`).
+Open Graph and Twitter tags need absolute URLs, so the build fills in `__SITE_URL__`
+in `index.html` from `SITE_URL` (set by the Pages workflow) or, on Vercel, from
+`VERCEL_PROJECT_PRODUCTION_URL`.
 
 **DNS Configuration:**
 ```
@@ -148,7 +160,11 @@ The included Chrome extension lets you compress URLs without opening the web app
 
 ```
 ├── index.html              Vite entry for the 3D React app
-├── public/404.html         Redirect/decode page (inlined decode engine), copied into every build
+├── public/                 Copied into every build as-is:
+│   ├── 404.html            Redirect/decode page (inlined decode engine)
+│   ├── favicon.svg         Browser-tab icon
+│   ├── apple-touch-icon.png iOS home-screen icon (180×180)
+│   └── og-image.png        Link-preview card (1200×630)
 ├── LICENSE                 MIT
 ├── src/
 │   ├── alphabets.js        Character sets & Huffman dictionaries
