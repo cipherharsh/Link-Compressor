@@ -150,7 +150,7 @@ export const HuffmanTree: React.FC = () => {
               borderRadius: 'var(--radius-sm)',
               padding: '6px 12px',
               fontFamily: 'var(--font-mono)',
-              fontSize: '11px',
+              fontSize: '12px',
               color: 'var(--color-text)',
               whiteSpace: 'nowrap',
               pointerEvents: 'none',

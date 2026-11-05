@@ -75,7 +75,7 @@ const Fallback2D: React.FC = () => {
             return (
               <g key={st.id || i}>
                 <circle cx={x} cy={40} r={5} fill="var(--color-accent)" />
-                <text x={x} y={65} fontSize="10" textAnchor="middle" fill="var(--color-muted)" fontFamily="var(--font-mono)">
+                <text x={x} y={65} fontSize="12" textAnchor="middle" fill="var(--color-muted)" fontFamily="var(--font-mono)">
                   {st.label.slice(0, 8)}
                 </text>
               </g>

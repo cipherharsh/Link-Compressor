@@ -34,11 +34,12 @@
   --color-on-accent-2: #06110C;
   --color-accent-2-dim: rgba(244, 241, 236, 0.1);
 
-  --color-danger: #E5534B;
-  --color-danger-dim: rgba(229, 83, 75, 0.14);
-  --color-xp: #E5534B;
-  --color-xp-dim: rgba(229, 83, 75, 0.14);
-  --color-xp-glow: rgba(229, 83, 75, 0.55);
+  /* Lighter than #E5534B so small text stays ≥4.5:1 even on its own tint. */
+  --color-danger: #EF6B62;
+  --color-danger-dim: rgba(239, 107, 98, 0.14);
+  --color-xp: #EF6B62;
+  --color-xp-dim: rgba(239, 107, 98, 0.14);
+  --color-xp-glow: rgba(239, 107, 98, 0.55);
   --color-xp-fill: #A31C18;
   --color-on-xp: #FFFFFF;
 
@@ -62,7 +63,9 @@
   --text-h3: clamp(1.2rem, 2.5vw, 1.5rem);
   --text-body: 1rem;
   --text-small: 0.875rem;
-  --text-xs: 0.75rem;
+  /* Readability floor: secondary labels at 13px, the tiniest chips/meta at 12px. */
+  --text-xs: 0.8125rem;
+  --text-2xs: 0.75rem;
 
   /* Radius */
   --radius-sm: 8px;
@@ -183,6 +186,12 @@ body {
 
 #webgl-container canvas {
   pointer-events: auto;
+}
+
+/* Firefox fades placeholders to ~54% opacity by default; keep them readable. */
+::placeholder {
+  color: var(--color-muted);
+  opacity: 1;
 }
 
 :focus-visible {

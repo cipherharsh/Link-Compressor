@@ -35,7 +35,7 @@ export const SCENE_THEMES: Record<Theme, SceneTheme> = {
     voxel: '#CDF22B',
     voxelEmissive: 0.3,
     lightA: '#CDF22B',
-    lightB: '#E5534B',
+    lightB: '#EF6B62',
     postFx: true,
   },
   light: {
