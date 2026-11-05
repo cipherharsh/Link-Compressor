@@ -68,32 +68,38 @@ The encoder picks the smallest character set that covers each path segment:
 2. Paste a URL → get a compressed link + QR code instantly
 3. Copy the link or download the QR code
 
-### Deploy to GitHub Pages
+### Deploy
 
-This repo includes a GitHub Actions workflow (`.github/workflows/deploy.yml`)
-that builds the Vite app and publishes it to GitHub Pages on every push to
-`main`. LinkZip is a bundled single-page app, so it must be **built** — Pages
-cannot serve the repo source directly.
+LinkZip is a bundled single-page app, so hosts must **build** it (`npm run build`,
+output in `dist/`); they cannot serve the repo source directly. Every build also
+emits `404.html` (from `public/`), a self-contained, zero-dependency decoder that
+hosts serve for unmatched paths, so any `https://<host>/<code>` short link is
+decoded and redirected entirely client-side.
+
+The asset base path comes from the `BASE_PATH` environment variable and defaults
+to `/`, which is right for any host that serves from the domain root.
+
+**Vercel / Netlify / any root-served host:** import the repo with the defaults
+(build command `npm run build`, output directory `dist`). No extra config.
+
+**GitHub Pages:** the included workflow (`.github/workflows/deploy.yml`) builds
+with `BASE_PATH=/Link-Compressor/` and publishes on every push to `main`.
 
 1. In your fork, open **Settings → Pages** and set **Source** to **GitHub Actions**.
 2. Push to `main` (or run the "Deploy to GitHub Pages" workflow manually). The
    site goes live at `https://<username>.github.io/<repo>/`.
-3. If your repository is **not** named `Link-Compressor`, change `base` in
-   `vite.config.ts` to `/<your-repo-name>/` so the built assets resolve.
-
-The build copies `404.html` (a self-contained, zero-dependency decoder) into the
-output, so any `https://<username>.github.io/<repo>/<code>` short link is decoded
-and redirected entirely client-side.
+3. If your repository is **not** named `Link-Compressor`, change `BASE_PATH` in
+   the workflow to `/<your-repo-name>/`.
 
 ### Custom Domain Setup
 
 To serve LinkZip from your own domain (e.g., `lz.io`):
 
-1. **Buy a short domain** and point its DNS at GitHub Pages (a `CNAME` record to
-   `<username>.github.io`, or `A` records to GitHub's Pages IPs).
-2. Add a `CNAME` file (or set the custom domain under **Settings → Pages**).
-3. Because a custom domain serves from the root, set `base` back to `/` in
-   `vite.config.ts`.
+1. **Buy a short domain** and point its DNS at your host (for GitHub Pages, a
+   `CNAME` record to `<username>.github.io`).
+2. Add the domain in your host's settings (for GitHub Pages, **Settings → Pages**).
+3. A custom domain serves from the root, so build with `BASE_PATH=/` (on GitHub
+   Pages, change it in the workflow).
 4. The `404.html` catch-all then handles all compressed paths on your domain.
 
 **DNS Configuration:**
@@ -128,8 +134,7 @@ The included Chrome extension lets you compress URLs without opening the web app
 
 ```
 ├── index.html              Vite entry for the 3D React app
-├── 404.html                Redirect/decode page (inlined decode engine)
-├── CNAME                   Custom domain (edit this)
+├── public/404.html         Redirect/decode page (inlined decode engine), copied into every build
 ├── LICENSE                 MIT
 ├── src/
 │   ├── alphabets.js        Character sets & Huffman dictionaries
