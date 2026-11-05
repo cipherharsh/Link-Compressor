@@ -68,23 +68,33 @@ The encoder picks the smallest character set that covers each path segment:
 2. Paste a URL → get a compressed link + QR code instantly
 3. Copy the link or download the QR code
 
-### Deploy Your Own Instance
+### Deploy to GitHub Pages
 
-1. Fork this repository
-2. Enable GitHub Pages (Settings → Pages → Source: `main`, folder: `/`)
-3. Edit `CNAME` with your custom domain
-4. Configure DNS: add a `CNAME` record pointing to `<username>.github.io`
-5. Done! Your short domain now serves and decodes compressed links
+This repo includes a GitHub Actions workflow (`.github/workflows/deploy.yml`)
+that builds the Vite app and publishes it to GitHub Pages on every push to
+`main`. LinkZip is a bundled single-page app, so it must be **built** — Pages
+cannot serve the repo source directly.
+
+1. In your fork, open **Settings → Pages** and set **Source** to **GitHub Actions**.
+2. Push to `main` (or run the "Deploy to GitHub Pages" workflow manually). The
+   site goes live at `https://<username>.github.io/<repo>/`.
+3. If your repository is **not** named `Link-Compressor`, change `base` in
+   `vite.config.ts` to `/<your-repo-name>/` so the built assets resolve.
+
+The build copies `404.html` (a self-contained, zero-dependency decoder) into the
+output, so any `https://<username>.github.io/<repo>/<code>` short link is decoded
+and redirected entirely client-side.
 
 ### Custom Domain Setup
 
-LinkZip lets you brand compressed links under your own short domain:
+To serve LinkZip from your own domain (e.g., `lz.io`):
 
-1. **Buy a short domain** (e.g., `lz.io`)
-2. **Deploy this repo** to GitHub Pages / Cloudflare Pages / Netlify
-3. **Configure custom domain** in your hosting provider's settings
-4. **Update LinkZip settings** (⚙️ in the app) with your domain
-5. The `404.html` catch-all will handle all compressed paths
+1. **Buy a short domain** and point its DNS at GitHub Pages (a `CNAME` record to
+   `<username>.github.io`, or `A` records to GitHub's Pages IPs).
+2. Add a `CNAME` file (or set the custom domain under **Settings → Pages**).
+3. Because a custom domain serves from the root, set `base` back to `/` in
+   `vite.config.ts`.
+4. The `404.html` catch-all then handles all compressed paths on your domain.
 
 **DNS Configuration:**
 ```
