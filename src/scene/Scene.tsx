@@ -7,6 +7,7 @@ import { PerformanceMonitor, OrbitControls } from '@react-three/drei';
 import { EffectComposer, Bloom, Vignette, ChromaticAberration } from '@react-three/postprocessing';
 import { BlendFunction } from 'postprocessing';
 import { useSceneStore } from '../state/sceneStore';
+import { useSceneTheme } from './sceneTheme';
 import WildStrand from './WildStrand';
 import HuffmanTree from './HuffmanTree';
 import VoxelQR from './VoxelQR';
@@ -68,8 +69,11 @@ export const Scene: React.FC = () => {
   const setFpsAndTier = useSceneStore((s) => s.setFpsAndTier);
   const setCapability = useSceneStore((s) => s.setCapability);
   const flattenQR = useSceneStore((s) => s.flattenQR);
+  const colors = useSceneTheme();
 
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  // Glow and edge-darkening blur QR edges and wash out the light theme.
+  const usePostFx = qualityTier !== 'low' && !isMobile && colors.postFx && !flattenQR;
   const dprCap = isMobile ? 1.5 : 2.0;
 
   // Adaptive performance thresholds
@@ -112,8 +116,8 @@ export const Scene: React.FC = () => {
       {/* Lighting */}
       <ambientLight intensity={0.4} />
       <directionalLight position={[5, 6, 8]} intensity={1.2} color="#FFFFFF" />
-      <pointLight position={[-4, -2, 4]} intensity={0.8} color="#6CF2C2" />
-      <pointLight position={[4, -2, 4]} intensity={0.8} color="#7C8CFF" />
+      <pointLight position={[-4, -2, 4]} intensity={0.8} color={colors.lightA} />
+      <pointLight position={[4, -2, 4]} intensity={0.8} color={colors.lightB} />
 
       {/* 3D Scene Components */}
       <Suspense fallback={null}>
@@ -123,8 +127,8 @@ export const Scene: React.FC = () => {
         <VoxelQR />
       </Suspense>
 
-      {/* Postprocessing (disabled on low tier or mobile for performance budget) */}
-      {qualityTier !== 'low' && !isMobile && (
+      {/* Postprocessing: dark theme only, off on low tier/mobile and while the QR is flattened */}
+      {usePostFx && (
         <EffectComposer multisampling={0}>
           <Bloom
             intensity={isCollapsing ? 1.2 : 0.6}

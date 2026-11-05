@@ -3,9 +3,11 @@
 import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
+import { useSceneTheme } from './sceneTheme';
 
 export const Ambient: React.FC = () => {
   const pointsRef = useRef<THREE.Points>(null);
+  const colors = useSceneTheme();
   const COUNT = 1500;
 
   const { geometry } = useMemo(() => {
@@ -35,13 +37,13 @@ export const Ambient: React.FC = () => {
 
   return (
     <>
-      <fog attach="fog" args={['#0B0D12', 6, 18]} />
+      <fog attach="fog" args={[colors.fog, 6, 18]} />
       <points ref={pointsRef} geometry={geometry}>
         <pointsMaterial
           size={0.04}
-          color="#8A93A6"
+          color={colors.dust}
           transparent
-          opacity={0.35}
+          opacity={colors.dustOpacity}
           sizeAttenuation
         />
       </points>

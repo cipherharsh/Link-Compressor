@@ -13,7 +13,35 @@ let passed = 0;
 let total = 0;
 const failures = [];
 
-for (const url of testUrls) {
+// QR-link payloads in the shapes LinkZip generates: an uppercase host plus a
+// "*"-prefixed QR-alphabet code (fully alphanumeric), and the GitHub Pages
+// variant whose case-sensitive "/Link-Compressor/" path forces mixed segments.
+const qrLinkPayloads = [
+  "HTTPS://LINKCP.VERCEL.APP/*3K$8.Q-Z+0P*7AB",
+  "HTTPS://LINKCP.VERCEL.APP/*1A2B3C4D5E6F7G8H9I0J",
+  "HTTPS://CIPHERHARSH.GITHUB.IO/Link-Compressor/*9Z$P.Q+R-S*T0U1V2W3",
+  "HTTP://LOCALHOST:3000/*ABC123$-+*.",
+  "TEST123",
+];
+
+const payloads = [...testUrls, ...qrLinkPayloads];
+
+// The alphanumeric mode must actually be used and produce a smaller symbol.
+{
+  const alnum = "HTTPS://LINKCP.VERCEL.APP/*1A2B3C4D5E6F7G8H9I0J1A2B3C4D5E6F7G8H9I";
+  const asBytes = alnum.toLowerCase(); // same length, but lowercase forces byte mode
+  const a = generateQR(alnum, "M");
+  const b = generateQR(asBytes, "M");
+  total++;
+  if (a.mode !== "alphanumeric" || a.version >= b.version) {
+    failures.push({ check: "alphanumeric is denser", alnumMode: a.mode, alnumVersion: a.version, byteVersion: b.version });
+  } else {
+    passed++;
+    console.log(`Alphanumeric QR: version ${a.version} vs byte version ${b.version} for the same length`);
+  }
+}
+
+for (const url of payloads) {
   for (const ec of ['L', 'M', 'Q', 'H']) {
     total++;
     const qr = generateQR(url, ec);

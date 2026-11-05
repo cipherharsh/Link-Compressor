@@ -4,6 +4,7 @@ import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useSceneStore } from '../state/sceneStore';
+import { useSceneTheme } from './sceneTheme';
 import vertShader from './shaders/strand.vert.glsl?raw';
 import fragShader from './shaders/strand.frag.glsl?raw';
 
@@ -15,6 +16,7 @@ export const WildStrand: React.FC = () => {
   const collapseProgress = useSceneStore((s) => s.collapseProgress);
   const activeUrl = useSceneStore((s) => s.activeUrl);
   const qualityTier = useSceneStore((s) => s.qualityTier);
+  const colors = useSceneTheme();
 
   const { gl } = useThree();
   const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
@@ -66,7 +68,9 @@ export const WildStrand: React.FC = () => {
       uProgress: { value: 0 },
       uCollapse: { value: 0 },
       uLength: { value: 0.8 },
-      uPixelRatio: { value: gl.getPixelRatio() }
+      uPixelRatio: { value: gl.getPixelRatio() },
+      uColorA: { value: new THREE.Color() },
+      uColorB: { value: new THREE.Color() }
     };
 
     return { geometry: geo, uniforms: u };
@@ -91,16 +95,24 @@ export const WildStrand: React.FC = () => {
     materialRef.current.uniforms.uLength.value = lenNorm;
   });
 
+  // Theme colours feed the shader; additive glow only suits the dark theme.
+  useEffect(() => {
+    uniforms.uColorA.value.set(colors.strandA);
+    uniforms.uColorB.value.set(colors.strandB);
+  }, [uniforms, colors.strandA, colors.strandB]);
+
   return (
     <points ref={pointsRef} geometry={geometry}>
       <shaderMaterial
+        // Blending is baked into the compiled program, so remount when it changes.
+        key={colors.additive ? 'additive' : 'normal'}
         ref={materialRef}
         vertexShader={vertShader}
         fragmentShader={fragShader}
         uniforms={uniforms}
         transparent
         depthWrite={false}
-        blending={THREE.AdditiveBlending}
+        blending={colors.additive ? THREE.AdditiveBlending : THREE.NormalBlending}
       />
     </points>
   );

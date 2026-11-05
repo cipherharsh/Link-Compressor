@@ -2,48 +2,51 @@ import React, { useState, useEffect } from 'react';
 import { api, type CompressResponse } from '../api/adapter';
 import { useGameStore } from '../state/gameStore';
 import { useSceneStore } from '../state/sceneStore';
+import { useThemeStore } from '../state/themeStore';
 import { playCollapseAnimation } from '../scene/timeline';
-import { generateQR, renderToCanvas, renderToSVG, downloadPNG, downloadSVG } from '../qrcode.js';
+import QrModal, { downloadQr, QR_INK } from './QrModal';
+import { copyText, canShare, shareLink } from './shareActions';
 
 export interface RushTarget {
-  code: string;
+  /** The site's name with scrambled letter case, e.g. 'gIThUb'. */
+  hint: string;
   domain: string;
   aliases: string[];
 }
 
 export const RUSH_TARGETS: RushTarget[] = [
-  { code: 'https://lz.io/gIThUb', domain: 'github.com', aliases: ['github', 'gh'] },
-  { code: 'https://lz.io/gOogLE', domain: 'google.com', aliases: ['google', 'goog'] },
-  { code: 'https://lz.io/yTUbE', domain: 'youtube.com', aliases: ['youtube', 'yt'] },
-  { code: 'https://lz.io/rEDdIT', domain: 'reddit.com', aliases: ['reddit'] },
-  { code: 'https://lz.io/tWItTEr', domain: 'twitter.com', aliases: ['twitter', 'x', 'x.com'] },
-  { code: 'https://lz.io/sPOtIFy', domain: 'spotify.com', aliases: ['spotify'] },
-  { code: 'https://lz.io/nETfLIx', domain: 'netflix.com', aliases: ['netflix', 'nflx'] },
-  { code: 'https://lz.io/dIScORd', domain: 'discord.com', aliases: ['discord'] },
-  { code: 'https://lz.io/aMaZoN', domain: 'amazon.com', aliases: ['amazon', 'amzn'] },
-  { code: 'https://lz.io/wIkIPeD', domain: 'wikipedia.org', aliases: ['wikipedia', 'wiki'] },
-  { code: 'https://lz.io/iNStAGr', domain: 'instagram.com', aliases: ['instagram', 'ig', 'insta'] },
-  { code: 'https://lz.io/lINkEDin', domain: 'linkedin.com', aliases: ['linkedin'] },
-  { code: 'https://lz.io/oPEn-AI', domain: 'openai.com', aliases: ['openai', 'chatgpt'] },
-  { code: 'https://lz.io/sTAcK-ov', domain: 'stackoverflow.com', aliases: ['stackoverflow', 'stack'] },
-  { code: 'https://lz.io/tWItCH', domain: 'twitch.tv', aliases: ['twitch'] },
-  { code: 'https://lz.io/fAcEBoOK', domain: 'facebook.com', aliases: ['facebook', 'fb', 'meta'] },
-  { code: 'https://lz.io/aPPlE-io', domain: 'apple.com', aliases: ['apple'] },
-  { code: 'https://lz.io/mICrOsFT', domain: 'microsoft.com', aliases: ['microsoft', 'msft'] },
-  { code: 'https://lz.io/tIkTOk', domain: 'tiktok.com', aliases: ['tiktok'] },
-  { code: 'https://lz.io/sTEaM', domain: 'steampowered.com', aliases: ['steam', 'steampowered'] },
-  { code: 'https://lz.io/nOTiOn-so', domain: 'notion.so', aliases: ['notion'] },
-  { code: 'https://lz.io/fIGmA', domain: 'figma.com', aliases: ['figma'] },
-  { code: 'https://lz.io/sLAcK', domain: 'slack.com', aliases: ['slack'] },
-  { code: 'https://lz.io/pINtERst', domain: 'pinterest.com', aliases: ['pinterest'] },
-  { code: 'https://lz.io/dROpBoX', domain: 'dropbox.com', aliases: ['dropbox'] },
-  { code: 'https://lz.io/mEDiUM', domain: 'medium.com', aliases: ['medium'] },
-  { code: 'https://lz.io/tELeGrAM', domain: 'telegram.org', aliases: ['telegram', 'tg'] },
-  { code: 'https://lz.io/wHAtSaPP', domain: 'whatsapp.com', aliases: ['whatsapp'] },
-  { code: 'https://lz.io/pAyPAl', domain: 'paypal.com', aliases: ['paypal'] },
-  { code: 'https://lz.io/eBAy-us', domain: 'ebay.com', aliases: ['ebay'] },
-  { code: 'https://lz.io/zOOm-us', domain: 'zoom.us', aliases: ['zoom'] },
-  { code: 'https://lz.io/iMDb-mv', domain: 'imdb.com', aliases: ['imdb'] },
+  { hint: 'gIThUb', domain: 'github.com', aliases: ['github', 'gh'] },
+  { hint: 'gOogLE', domain: 'google.com', aliases: ['google', 'goog'] },
+  { hint: 'yTUbE', domain: 'youtube.com', aliases: ['youtube', 'yt'] },
+  { hint: 'rEDdIT', domain: 'reddit.com', aliases: ['reddit'] },
+  { hint: 'tWItTEr', domain: 'twitter.com', aliases: ['twitter', 'x', 'x.com'] },
+  { hint: 'sPOtIFy', domain: 'spotify.com', aliases: ['spotify'] },
+  { hint: 'nETfLIx', domain: 'netflix.com', aliases: ['netflix', 'nflx'] },
+  { hint: 'dIScORd', domain: 'discord.com', aliases: ['discord'] },
+  { hint: 'aMaZoN', domain: 'amazon.com', aliases: ['amazon', 'amzn'] },
+  { hint: 'wIkIPeD', domain: 'wikipedia.org', aliases: ['wikipedia', 'wiki'] },
+  { hint: 'iNStAGr', domain: 'instagram.com', aliases: ['instagram', 'ig', 'insta'] },
+  { hint: 'lINkEDin', domain: 'linkedin.com', aliases: ['linkedin'] },
+  { hint: 'oPEn-AI', domain: 'openai.com', aliases: ['openai', 'chatgpt'] },
+  { hint: 'sTAcK-ov', domain: 'stackoverflow.com', aliases: ['stackoverflow', 'stack'] },
+  { hint: 'tWItCH', domain: 'twitch.tv', aliases: ['twitch'] },
+  { hint: 'fAcEBoOK', domain: 'facebook.com', aliases: ['facebook', 'fb', 'meta'] },
+  { hint: 'aPPlE-io', domain: 'apple.com', aliases: ['apple'] },
+  { hint: 'mICrOsFT', domain: 'microsoft.com', aliases: ['microsoft', 'msft'] },
+  { hint: 'tIkTOk', domain: 'tiktok.com', aliases: ['tiktok'] },
+  { hint: 'sTEaM', domain: 'steampowered.com', aliases: ['steam', 'steampowered'] },
+  { hint: 'nOTiOn-so', domain: 'notion.so', aliases: ['notion'] },
+  { hint: 'fIGmA', domain: 'figma.com', aliases: ['figma'] },
+  { hint: 'sLAcK', domain: 'slack.com', aliases: ['slack'] },
+  { hint: 'pINtERst', domain: 'pinterest.com', aliases: ['pinterest'] },
+  { hint: 'dROpBoX', domain: 'dropbox.com', aliases: ['dropbox'] },
+  { hint: 'mEDiUM', domain: 'medium.com', aliases: ['medium'] },
+  { hint: 'tELeGrAM', domain: 'telegram.org', aliases: ['telegram', 'tg'] },
+  { hint: 'wHAtSaPP', domain: 'whatsapp.com', aliases: ['whatsapp'] },
+  { hint: 'pAyPAl', domain: 'paypal.com', aliases: ['paypal'] },
+  { hint: 'eBAy-us', domain: 'ebay.com', aliases: ['ebay'] },
+  { hint: 'zOOm-us', domain: 'zoom.us', aliases: ['zoom'] },
+  { hint: 'iMDb-mv', domain: 'imdb.com', aliases: ['imdb'] },
 ];
 
 export function shuffleTargets(list: RushTarget[]): RushTarget[] {
@@ -78,7 +81,9 @@ const Playground: React.FC = () => {
   const [compressResult, setCompressResult] = useState<CompressResponse | null>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [compressError, setCompressError] = useState<string | null>(null);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const [copyState, setCopyState] = useState<'idle' | 'copied' | 'failed'>('idle');
+  const [linkStyle, setLinkStyle] = useState<'classic' | 'emoji'>('classic');
+  const [isQrOpen, setIsQrOpen] = useState(false);
 
   // Decode
   const [inputCode, setInputCode] = useState('');
@@ -102,8 +107,15 @@ const Playground: React.FC = () => {
 
   const recordCompression = useGameStore((s) => s.recordCompression);
   const recordDecode = useGameStore((s) => s.recordDecode);
+  const recordScanReady = useGameStore((s) => s.recordScanReady);
   const flattenQR = useSceneStore((s) => s.flattenQR);
   const toggleFlattenQR = useSceneStore((s) => s.toggleFlattenQR);
+  const webglSupported = useSceneStore((s) => s.webglSupported);
+  const theme = useThemeStore((s) => s.theme);
+
+  const displayUrl = compressResult
+    ? linkStyle === 'emoji' ? compressResult.emojiUrl : compressResult.shortUrl
+    : '';
 
   // Seed the Daily Squeeze URL from the calendar date.
   useEffect(() => {
@@ -155,22 +167,15 @@ const Playground: React.FC = () => {
     }
   };
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedLink(true);
-    setTimeout(() => setCopiedLink(false), 2000);
+  const handleCopy = async (text: string) => {
+    setCopyState((await copyText(text)) ? 'copied' : 'failed');
+    setTimeout(() => setCopyState('idle'), 2000);
   };
 
   const handleDownloadQR = (type: 'png' | 'svg') => {
     if (!compressResult) return;
-    const qr = generateQR(compressResult.qrPayload, 'M');
-    if (type === 'png') {
-      const canvas = document.createElement('canvas');
-      renderToCanvas(canvas, qr.matrix, { scale: 8, margin: 4 });
-      downloadPNG(canvas, 'linkzip-qr.png');
-    } else {
-      downloadSVG(renderToSVG(qr.matrix, { scale: 8, margin: 4 }), 'linkzip-qr.svg');
-    }
+    downloadQr(compressResult.qrPayload, QR_INK[theme], type);
+    recordScanReady();
   };
 
   const startRush = () => {
@@ -299,30 +304,68 @@ const Playground: React.FC = () => {
                 </span>
               </div>
 
+              <div className="link-style" role="radiogroup" aria-label="Link style">
+                {(['classic', 'emoji'] as const).map((style) => (
+                  <button
+                    key={style}
+                    role="radio"
+                    aria-checked={linkStyle === style}
+                    className={`link-style__opt${linkStyle === style ? ' is-active' : ''}`}
+                    onClick={() => setLinkStyle(style)}
+                  >
+                    {style === 'classic' ? 'Classic' : 'Emoji'}
+                  </button>
+                ))}
+              </div>
+
               <div className="link-box">
-                <span className="link-box__url">{compressResult.shortUrl}</span>
+                <span className={`link-box__url${linkStyle === 'emoji' ? ' is-emoji' : ''}`}>{displayUrl}</span>
                 <button
-                  className={`copy-btn${copiedLink ? ' is-copied' : ''}`}
-                  onClick={() => handleCopy(compressResult.shortUrl)}
+                  className={`copy-btn${copyState === 'copied' ? ' is-copied' : ''}`}
+                  onClick={() => handleCopy(displayUrl)}
                 >
-                  {copiedLink ? 'Copied ✓' : 'Copy'}
+                  {copyState === 'copied' ? 'Copied ✓' : copyState === 'failed' ? 'Copy failed' : 'Copy'}
                 </button>
               </div>
+
+              {linkStyle === 'emoji' && (
+                <p className="link-style__hint">
+                  {[...compressResult.emojiCode].length} emoji instead of {compressResult.compressedLength} characters.
+                  Browsers and most chat apps show the emoji; some apps paste it as longer %F0… text.
+                </p>
+              )}
 
               <div className="metrics-row">
                 <div>Original: <strong>{compressResult.originalLength} chars</strong></div>
-                <div>Compressed: <strong style={{ color: 'var(--color-accent)' }}>{compressResult.compressedLength} chars</strong></div>
-                <div>Saved: <strong style={{ color: 'var(--color-xp)' }}>{compressResult.originalLength - compressResult.compressedLength} bytes</strong></div>
+                <div>Compressed: <strong className="metric-accent">{compressResult.compressedLength} chars</strong></div>
+                <div>Saved: <strong className="metric-xp">{compressResult.originalLength - compressResult.compressedLength} chars</strong></div>
               </div>
 
               <div className="compress-toolbar">
-                <button className={`toolbar-btn${flattenQR ? ' is-active' : ''}`} onClick={toggleFlattenQR}>
-                  📷 {flattenQR ? 'Restore 3D Angle' : 'Flatten for Camera Scan'}
+                <button className="btn-accent toolbar-primary" onClick={() => setIsQrOpen(true)}>
+                  Show QR code
                 </button>
-                <button className="toolbar-btn" onClick={() => handleDownloadQR('png')}>💾 Download PNG</button>
-                <button className="toolbar-btn" onClick={() => handleDownloadQR('svg')}>📐 Download SVG</button>
+                <button className="toolbar-btn" onClick={() => handleDownloadQR('png')}>Download PNG</button>
+                <button className="toolbar-btn" onClick={() => handleDownloadQR('svg')}>Download SVG</button>
+                {canShare() && (
+                  <button className="toolbar-btn" onClick={() => shareLink(displayUrl)}>Share</button>
+                )}
+                {webglSupported && (
+                  <button className={`toolbar-btn${flattenQR ? ' is-active' : ''}`} onClick={toggleFlattenQR}>
+                    {flattenQR ? 'Restore 3D view' : 'Flatten 3D QR'}
+                  </button>
+                )}
               </div>
             </div>
+          )}
+
+          {compressResult && (
+            <QrModal
+              isOpen={isQrOpen}
+              onClose={() => setIsQrOpen(false)}
+              qrPayload={compressResult.qrPayload}
+              displayUrl={displayUrl}
+            />
           )}
         </div>
       )}
@@ -341,7 +384,7 @@ const Playground: React.FC = () => {
                 required
                 value={inputCode}
                 onChange={(e) => setInputCode(e.target.value)}
-                placeholder="e.g. 8z$h7B-01 or full URL https://lz.io/8z$h7B-01"
+                placeholder="A short link or code: classic, emoji, or from a QR"
               />
               <button type="submit" className="btn-accent2">Decode Link</button>
             </div>
@@ -409,8 +452,8 @@ const Playground: React.FC = () => {
       {activeTab === 'rush' && (
         <div>
           <div className="minigame-head">
-            <h4 className="accent">Decode Rush (30s Sprint)</h4>
-            <p>Identify the original domain for each compressed code before the timer expires. +25 XP per correct domain!</p>
+            <h4 className="accent">Decode Rush (30s sprint)</h4>
+            <p>Each card shows a site's name with its letters jumbled in case. Name the site before the timer runs out. +25 XP each.</p>
           </div>
 
           {rushGameOver && !rushActive && (
@@ -444,7 +487,7 @@ const Playground: React.FC = () => {
                 }`}
               >
                 <div className="rush-target__head">
-                  <span className="rush-target__hint">TARGET CODE:</span>
+                  <span className="rush-target__hint">SCRAMBLED NAME:</span>
                   {rushFeedback === 'correct' && (
                     <span className="rush-target__feedback is-correct">✓ Correct! +25 XP</span>
                   )}
@@ -452,7 +495,7 @@ const Playground: React.FC = () => {
                     <span className="rush-target__feedback is-wrong">✗ Incorrect, try again!</span>
                   )}
                 </div>
-                <div className="rush-target__code">{currentRushTarget.code}</div>
+                <div className="rush-target__code">{currentRushTarget.hint}</div>
               </div>
 
               <form className="rush-form" onSubmit={handleRushAnswer}>

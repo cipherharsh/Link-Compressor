@@ -9,24 +9,13 @@ export interface Achievement {
   unlockedAt: number | null; // timestamp or null
 }
 
-export interface Unlockable {
-  level: number;
-  label: string;
-}
-
-export const UNLOCKABLES: Unlockable[] = [
-  { level: 3, label: 'Theme: Aurora (purple & teal glow)' },
-  { level: 5, label: 'Voxel Style: Rounded Cubes' },
-  { level: 8, label: 'Voxel Style: Glass Material' }
-];
-
 export const INITIAL_ACHIEVEMENTS: Achievement[] = [
   { id: 'first_squeeze', name: 'First Squeeze', description: 'Complete 1 compression', unlockedAt: null },
   { id: 'half_size', name: 'Half Size', description: 'Achieve a ratio of 50% or better', unlockedAt: null },
   { id: 'tiny_titan', name: 'Tiny Titan', description: 'Compressed output of 20 characters or fewer', unlockedAt: null },
   { id: 'streak_7', name: 'Seven Day Streak', description: 'Compress URLs 7 consecutive days', unlockedAt: null },
   { id: 'decoder', name: 'Round Trip', description: 'Decode your own compressed link successfully', unlockedAt: null },
-  { id: 'scanner', name: 'Scan Ready', description: 'Use the Flatten QR toggle then download the QR', unlockedAt: null }
+  { id: 'scanner', name: 'Scan Ready', description: 'Open or download a QR code', unlockedAt: null }
 ];
 
 // XP required for level n = round(100 * n^1.5)
@@ -69,12 +58,10 @@ interface GameState {
   totalBytesSaved: number; // persisted across sessions
   totalOriginalChars: number; // persisted; used to derive the average ratio
   achievements: Achievement[];
-  isMuted: boolean;
   activeNotices: FloatingXpNotice[];
-  
+
   // Actions
   setHandle: (handle: string, email?: string) => void;
-  toggleMute: () => void;
   clearNotice: (id: string) => void;
   recordCompression: (opts: { originalLength: number; compressedLength: number; hasDictionaryHit: boolean }) => number;
   recordDecode: () => void;
@@ -106,13 +93,23 @@ function saveState(state: Partial<GameState>) {
       totalCompressions: state.totalCompressions,
       totalBytesSaved: state.totalBytesSaved,
       totalOriginalChars: state.totalOriginalChars,
-      achievements: state.achievements,
-      isMuted: state.isMuted
+      achievements: state.achievements
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(subset));
   } catch {
     // ignore
   }
+}
+
+/**
+ * Keep names and descriptions current from INITIAL_ACHIEVEMENTS while preserving
+ * each saved unlock time, so copy fixes reach players who already have a save.
+ */
+function mergeAchievements(saved: Achievement[] | undefined): Achievement[] {
+  return INITIAL_ACHIEVEMENTS.map((a) => ({
+    ...a,
+    unlockedAt: saved?.find((s) => s.id === a.id)?.unlockedAt ?? null,
+  }));
 }
 
 const initialSaved = loadPersistedState();
@@ -128,17 +125,11 @@ export const useGameStore = create<GameState>((set, get) => ({
   totalCompressions: initialSaved.totalCompressions || 0,
   totalBytesSaved: initialSaved.totalBytesSaved || 0,
   totalOriginalChars: initialSaved.totalOriginalChars || 0,
-  achievements: initialSaved.achievements || INITIAL_ACHIEVEMENTS,
-  isMuted: initialSaved.isMuted || false,
+  achievements: mergeAchievements(initialSaved.achievements),
   activeNotices: [],
 
   setHandle: (handle, email = '') => {
     set({ handle, email });
-    saveState(get());
-  },
-
-  toggleMute: () => {
-    set(s => ({ isMuted: !s.isMuted }));
     saveState(get());
   },
 

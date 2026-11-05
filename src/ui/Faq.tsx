@@ -23,19 +23,19 @@ const FAQS: FaqItem[] = [
     id: 'faq-3',
     question: 'Why are LinkZip QR codes easier for phone cameras to scan?',
     answer:
-      'Standard QR generators use 8-bit byte mode for URLs. LinkZip encodes compressed strings using the QR specification’s alphanumeric mode (45 characters: 0-9, A-Z, and special symbols). Alphanumeric mode packs pairs of characters into 11 bits (5.5 bits/char), resulting in significantly smaller matrix sizes (often 1 to 2 QR versions lower) with larger module pixels that cameras lock onto instantly.',
+      'Most QR generators store links in 8-bit byte mode. LinkZip writes the QR version of your link in the QR specification’s alphanumeric mode instead: an uppercase address (web addresses ignore case in the domain) followed by a code drawn from the QR character set. Alphanumeric mode packs two characters into 11 bits (5.5 bits per character), so the code often fits one QR version smaller, with bigger squares that cameras lock onto faster. Parts that must keep lowercase letters, like a GitHub Pages project path, stay in byte mode automatically.',
   },
   {
     id: 'faq-4',
-    question: 'What is the "Flatten QR" toggle in the 3D HUD?',
+    question: 'How do I scan my QR code?',
     answer:
-      'The 3D voxel QR code renders extruded cubes that tilt and rotate dynamically with camera drift. While visually striking, angled perspectives can cause shadow occlusions. Clicking "Flatten QR" animates the camera to a perfectly flat, top-down perspective with maximum black-and-white contrast so you can scan the code directly off your monitor with a smartphone.',
+      'The 3D voxel QR is the animated version of your code; it tilts and drifts, so it is not the best thing to scan. To scan, press "Show QR code" after compressing: it opens a large, flat code with dark squares on white and a proper border, plus download and share buttons. "Flatten 3D QR" also turns the 3D code into a flat, dark-on-white, scannable version.',
   },
   {
     id: 'faq-5',
     question: 'Can I use my own custom domain?',
     answer:
-      'Yes! LinkZip supports any static host (GitHub Pages, Cloudflare Pages, Netlify). You can configure your custom domain in the settings or deploy a CNAME file. As long as 404.html is served for unknown routes, any custom domain will decode and redirect your links seamlessly.',
+      'Yes. LinkZip runs on any static host (GitHub Pages, Vercel, Cloudflare Pages, Netlify). Short links always use the domain the site is served from, so deploy it on your own domain and the links follow. As long as the host serves 404.html for unknown paths, every link on your domain decodes and redirects.',
   },
 ];
 

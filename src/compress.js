@@ -16,6 +16,7 @@ import {
   subalphabets,
   outputAlphabetASCII,
   outputAlphabetQR,
+  outputAlphabetEmoji,
   tldHuffman,
   domainHuffman,
   pathSegHuffman,
@@ -580,20 +581,27 @@ export function stringToBits(str, alphabet) {
 // High‑level encode / decode
 // ═══════════════════════════════════════════════════════════════════════════
 
+function alphabetFor(mode) {
+  if (mode === "qr") return outputAlphabetQR;
+  if (mode === "emoji") return outputAlphabetEmoji;
+  return outputAlphabetASCII;
+}
+
 /**
  * Encode a URL to a compressed string.
  *
  * @param {string} url      The original URL.
- * @param {"ascii"|"qr"} mode  Output alphabet to use.
+ * @param {"ascii"|"qr"|"emoji"} mode  Output alphabet to use.
  * @returns {{ encoded: string, analytics: object }}
  */
 export function encode(url, mode = "ascii") {
-  const alphabet = mode === "qr" ? outputAlphabetQR : outputAlphabetASCII;
   const { bits, analytics } = compress(url);
-  const encoded = bitsToString(bits, alphabet);
+  const encoded = bitsToString(bits, alphabetFor(mode));
+  // Count symbols (code points), so each emoji counts once rather than twice.
+  const symbols = [...encoded].length;
   analytics.originalLength   = url.length;
-  analytics.compressedLength = encoded.length;
-  analytics.ratio = 1 - encoded.length / url.length;
+  analytics.compressedLength = symbols;
+  analytics.ratio = 1 - symbols / url.length;
   return { encoded, analytics };
 }
 
@@ -601,11 +609,10 @@ export function encode(url, mode = "ascii") {
  * Decode a compressed string back to the original URL.
  *
  * @param {string} str           The compressed string.
- * @param {"ascii"|"qr"} mode    Which alphabet was used.
+ * @param {"ascii"|"qr"|"emoji"} mode    Which alphabet was used.
  * @returns {string}             The original URL.
  */
 export function decode(str, mode = "ascii") {
-  const alphabet = mode === "qr" ? outputAlphabetQR : outputAlphabetASCII;
-  const bits = stringToBits(str, alphabet);
+  const bits = stringToBits(str, alphabetFor(mode));
   return decompress(bits);
 }

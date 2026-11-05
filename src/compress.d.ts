@@ -1,6 +1,6 @@
 /** Type declarations for the vanilla-JS compression engine (compress.js). */
 
-export type OutputMode = 'ascii' | 'qr';
+export type OutputMode = 'ascii' | 'qr' | 'emoji';
 
 export interface CompressionStageInfo {
   name: string;

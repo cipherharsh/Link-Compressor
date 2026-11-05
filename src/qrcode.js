@@ -436,6 +436,57 @@ function qr8BitByte(data) {
   };
 }
 
+/** ISO/IEC 18004 alphanumeric charset; a character's index is its code value. */
+const ALPHANUMERIC_CHARSET = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ $%*+-./:";
+
+/** Alphanumeric segment: two characters per 11 bits (5.5 bits/char) vs 8 for bytes. */
+function qrAlphaNum(data) {
+  const values = Array.from(data, (ch) => {
+    const v = ALPHANUMERIC_CHARSET.indexOf(ch);
+    if (v < 0) throw new Error("Character not allowed in alphanumeric mode: " + ch);
+    return v;
+  });
+  return {
+    getMode: function() { return QRMode.MODE_ALPHA_NUM; },
+    getLength: function() { return values.length; },
+    write: function(buffer) {
+      let i = 0;
+      for (; i + 1 < values.length; i += 2) {
+        buffer.put(values[i] * 45 + values[i + 1], 11);
+      }
+      if (i < values.length) {
+        buffer.put(values[i], 6);
+      }
+    }
+  };
+}
+
+/**
+ * Split text into byte and alphanumeric segments. A short alphanumeric run in
+ * the middle of byte data costs more in segment headers than it saves, so runs
+ * under MIN_ALNUM_RUN characters are folded into the neighbouring byte data.
+ */
+const MIN_ALNUM_RUN = 11;
+function segmentText(text) {
+  const runs = [];
+  for (const ch of text) {
+    const mode = ALPHANUMERIC_CHARSET.includes(ch) ? "alphanumeric" : "byte";
+    const last = runs[runs.length - 1];
+    if (last && last.mode === mode) last.text += ch;
+    else runs.push({ mode, text: ch });
+  }
+  if (runs.length <= 1) return runs;
+
+  const merged = [];
+  for (const run of runs) {
+    const mode = run.mode === "alphanumeric" && run.text.length < MIN_ALNUM_RUN ? "byte" : run.mode;
+    const last = merged[merged.length - 1];
+    if (last && last.mode === mode) last.text += run.text;
+    else merged.push({ mode, text: run.text });
+  }
+  return merged;
+}
+
 function createBytes(buffer, rsBlocks) {
   let offset = 0;
   let maxDcCount = 0;
@@ -704,8 +755,8 @@ function createQRCode(typeNumber, errorCorrectionLevel) {
     return pattern;
   };
 
-  self.addData = function(data) {
-    _dataList.push(qr8BitByte(data));
+  self.addData = function(data, mode = "byte") {
+    _dataList.push(mode === "alphanumeric" ? qrAlphaNum(data) : qr8BitByte(data));
     _dataCache = null;
   };
 
@@ -754,16 +805,25 @@ function createQRCode(typeNumber, errorCorrectionLevel) {
  *
  * @param {string} text
  * @param {"L"|"M"|"Q"|"H"} [ecLevelStr="M"]
+ * Text is split into alphanumeric and byte segments automatically, so an
+ * uppercase payload such as "HTTPS://EXAMPLE.COM/*ABC" packs into the denser
+ * alphanumeric mode while any lowercase or other characters stay in byte mode.
+ *
  * @returns {{ matrix: boolean[][], size: number, version: number, mode: string }}
+ *          mode is "alphanumeric", "byte", or "mixed".
  */
 export function generateQR(text, ecLevelStr = "M") {
   const ecLevel = QRErrorCorrectLevel[ecLevelStr] !== undefined
     ? QRErrorCorrectLevel[ecLevelStr]
     : QRErrorCorrectLevel.M;
 
+  const segments = text ? segmentText(text) : [{ mode: "byte", text: "" }];
   const qr = createQRCode(0, ecLevel);
-  qr.addData(text);
+  for (const seg of segments) qr.addData(seg.text, seg.mode);
   qr.make();
+
+  const modes = new Set(segments.map((s) => s.mode));
+  const mode = modes.size > 1 ? "mixed" : (segments[0] ? segments[0].mode : "byte");
 
   const size = qr.getModuleCount();
   const matrix = [];
@@ -779,7 +839,7 @@ export function generateQR(text, ecLevelStr = "M") {
     matrix,
     size,
     version: qr.getVersion(),
-    mode: "byte"
+    mode
   };
 }
 

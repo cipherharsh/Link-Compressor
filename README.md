@@ -58,6 +58,20 @@ The encoder picks the smallest character set that covers each path segment:
 | 6 | `A-Za-z 0-9 - _` | 64 | 6 |
 | 7 | Full URL charset | 80 | 7 |
 
+### Link Styles
+
+Every compression produces three forms of the same link, and all of them decode
+on the site (in-app and in `404.html`):
+
+| Style | Example path | Alphabet | Notes |
+|-------|--------------|----------|-------|
+| Classic | `/144fWYB4XvoHE2CZ…` | 64 URL-safe chars (`0-9 A-Z a-z - _`) | Default; works everywhere |
+| Emoji | `/🐁🐐👌👢💊…` | 256 single-code-point emoji | ~25% fewer symbols; some apps paste it percent-encoded (`%F0%9F…`) |
+| QR link | `/*NY0M$*S$-POG0…` | 42-char QR set, after a `*` marker | Encoded in the QR code. Scheme and host are uppercased so the QR uses dense **alphanumeric mode** (often one QR version smaller); a case-sensitive base path such as `/Link-Compressor` stays in byte mode automatically |
+
+The `*` never occurs in classic codes, so a leading `*` marks a QR-alphabet code,
+and any non-ASCII code is treated as an emoji link.
+
 ---
 
 ## Quick Start
@@ -168,15 +182,16 @@ The included Chrome extension lets you compress URLs without opening the web app
 ## Testing
 
 ```bash
-# Run the round-trip test suite
-node tests/roundtrip.test.js
+npm test          # engine round-trip, extension parity, QR scanning, 404.html parity
+npm run test:all  # the above plus the vitest suites
 ```
 
-The test suite verifies:
-- ✅ 100+ real-world URLs round-trip correctly (encode → decode = original)
-- ✅ Both ASCII and QR output alphabets produce lossless results
+The suites verify:
+- ✅ 150+ real-world URLs round-trip in the classic, QR, and emoji alphabets (emoji also through percent-encoding)
+- ✅ Every generated QR code, including alphanumeric and mixed-segment QR links, scans back with jsQR
+- ✅ The decoder inlined in `public/404.html` decodes every link style identically to `src/compress.js`
+- ✅ The browser extension bundle matches the engine
 - ✅ Edge cases: ports, unicode, fragments, IP hosts, empty paths
-- ✅ Compression ratio statistics
 
 ---
 

@@ -40,6 +40,20 @@ export const outputAlphabetASCII =
 export const outputAlphabetQR =
   "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$-+*.".split("");
 
+/** 256 single-code-point emoji (8 bits per symbol) for "emoji links". Every one
+ *  has default emoji presentation, so none needs a variation selector, skin-tone
+ *  modifier, or ZWJ sequence, and each renders the same on every platform.
+ *  The ranges (and their order) must stay identical to the copy in 404.html.  */
+const EMOJI_RANGES = [
+  [0x1F400, 0x1F43E], // animals
+  [0x1F440, 0x1F440], // eyes
+  [0x1F442, 0x1F4FC], // people, objects, symbols
+  [0x1F500, 0x1F504], // arrows
+];
+export const outputAlphabetEmoji = EMOJI_RANGES.flatMap(([start, end]) =>
+  Array.from({ length: end - start + 1 }, (_, i) => String.fromCodePoint(start + i))
+);
+
 // ────────────────────────────────────────────────────────────────────────────
 // Huffman table builder
 // ────────────────────────────────────────────────────────────────────────────

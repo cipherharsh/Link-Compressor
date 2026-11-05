@@ -13,10 +13,44 @@ export interface CompressionStage {
 export interface CompressResponse {
   code: string;
   shortUrl: string;
+  /** Same link written with the 256-emoji alphabet. */
+  emojiCode: string;
+  emojiUrl: string;
   originalLength: number;
   compressedLength: number;
+  /** Uppercase, QR-alphabet form of the link; encodes in dense alphanumeric QR mode. */
   qrPayload: string;
   stages: CompressionStage[];
+}
+
+/** First path character that marks a QR-alphabet code; it never occurs in the ASCII alphabet. */
+export const QR_CODE_MARKER = '*';
+
+/** The site's own short-link origin + base path, e.g. "https://linkcp.vercel.app". */
+function shortLinkBase(): string {
+  const raw = (typeof window !== 'undefined' ? getDomain() : 'lz.io').replace(/\/+$/, '');
+  if (/^https?:\/\//i.test(raw)) return raw;
+  const proto = typeof window !== 'undefined' && window.location?.protocol === 'http:' ? 'http://' : 'https://';
+  return `${proto}${raw}`;
+}
+
+/**
+ * QR form of a link: scheme and host uppercased (they're case-insensitive) and the
+ * code written in the QR alphabet behind QR_CODE_MARKER, so the whole string fits
+ * QR alphanumeric mode. Any base path (e.g. GitHub Pages' "/Link-Compressor") is
+ * case-sensitive, so it's kept as-is and encoded as a separate byte segment.
+ */
+function qrLinkFor(base: string, qrCode: string): string {
+  const m = base.match(/^(https?:\/\/)([^/]+)(.*)$/i);
+  if (!m) return `${base}/${QR_CODE_MARKER}${qrCode}`;
+  const [, proto, host, path] = m;
+  return `${proto.toUpperCase()}${host.toUpperCase()}${path}/${QR_CODE_MARKER}${qrCode}`;
+}
+
+/** Short link for a URL without touching usage stats (for previews and games). */
+export function shortLinkFor(url: string): { code: string; shortUrl: string } {
+  const code = encode(url.trim(), 'ascii').encoded;
+  return { code, shortUrl: `${shortLinkBase()}/${code}` };
 }
 
 export interface DecompressResponse {
@@ -136,14 +170,10 @@ export function localCompress(url: string): CompressResponse {
   const trimmed = url.trim();
   const asciiResult = encode(trimmed, 'ascii');
 
-  const baseDomain = typeof window !== 'undefined' ? getDomain() : 'https://lz.io';
-  const cleanDomain = baseDomain.replace(/\/+$/, '');
-  let domainWithProto = cleanDomain;
-  if (!/^https?:\/\//i.test(domainWithProto)) {
-    const proto = (typeof window !== 'undefined' && window.location?.protocol === 'http:') ? 'http://' : 'https://';
-    domainWithProto = `${proto}${cleanDomain}`;
-  }
-  const shortUrl = `${domainWithProto}/${asciiResult.encoded}`;
+  const base = shortLinkBase();
+  const shortUrl = `${base}/${asciiResult.encoded}`;
+  const emojiCode = encode(trimmed, 'emoji').encoded;
+  const qrPayload = qrLinkFor(base, encode(trimmed, 'qr').encoded);
 
   // Map internal analytics stages to API contract
   let accumulatedBits = trimmed.length * 8;
@@ -183,11 +213,28 @@ export function localCompress(url: string): CompressResponse {
   return {
     code: asciiResult.encoded,
     shortUrl,
+    emojiCode,
+    emojiUrl: `${base}/${emojiCode}`,
     originalLength: trimmed.length,
     compressedLength: asciiResult.encoded.length,
-    qrPayload: shortUrl,
+    qrPayload,
     stages
   };
+}
+
+function safeDecodeURIComponent(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
+}
+
+function requireHttpUrl(url: string): DecompressResponse {
+  if (!/^https?:\/\//i.test(url)) {
+    throw new Error('That code did not decode to a web address.');
+  }
+  return { url };
 }
 
 export function localDecompress(code: string): DecompressResponse {
@@ -195,9 +242,18 @@ export function localDecompress(code: string): DecompressResponse {
     throw new Error('A compressed code or short link is required.');
   }
 
-  const cleanCode = extractPayload(code);
+  // Paths arrive percent-encoded (emoji always are), so decode them first.
+  const cleanCode = safeDecodeURIComponent(extractPayload(code));
   if (!cleanCode) {
     throw new Error('Could not extract a valid compressed code from input.');
+  }
+
+  // QR links mark their QR-alphabet code explicitly; emoji links are non-ASCII.
+  if (cleanCode.startsWith(QR_CODE_MARKER)) {
+    return requireHttpUrl(decode(cleanCode.slice(QR_CODE_MARKER.length), 'qr'));
+  }
+  if ([...cleanCode].some((ch) => (ch.codePointAt(0) ?? 0) > 0x7f)) {
+    return requireHttpUrl(decode(cleanCode, 'emoji'));
   }
 
   // 1. Try decoding as ASCII mode first

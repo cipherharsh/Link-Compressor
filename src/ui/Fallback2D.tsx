@@ -1,6 +1,8 @@
 import React, { useEffect, useRef } from 'react';
 import { useSceneStore } from '../state/sceneStore';
+import { useThemeStore } from '../state/themeStore';
 import { generateQR, renderToCanvas } from '../qrcode.js';
+import { QR_INK } from './QrModal';
 
 const PLACEHOLDER_STAGES = [
   { id: '1', label: 'Strip', bitsBefore: 100, bitsAfter: 80 },
@@ -14,24 +16,26 @@ const Fallback2D: React.FC = () => {
   const activeStages = useSceneStore((s) => s.activeStages);
   const activeQrPayload = useSceneStore((s) => s.activeQrPayload);
   const isCollapsing = useSceneStore((s) => s.isCollapsing);
+  const theme = useThemeStore((s) => s.theme);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
 
-  // Re-render the 2D QR whenever the payload changes.
+  // Re-render the 2D QR whenever the payload or theme changes. Dark-on-white keeps it scannable.
   useEffect(() => {
     if (!canvasRef.current) return;
     try {
-      const qr = generateQR(activeQrPayload || 'https://lz.io', 'M');
+      const fallbackTarget = typeof window !== 'undefined' ? window.location.href.split('#')[0] : '';
+      const qr = generateQR(activeQrPayload || fallbackTarget, 'M');
       renderToCanvas(canvasRef.current, qr.matrix, {
         scale: 6,
         margin: 4,
-        foreground: '#F2F4F8',
-        background: '#141821',
+        foreground: QR_INK[theme],
+        background: '#FFFFFF',
       });
     } catch {
       // Leave the canvas blank if QR generation fails.
     }
-  }, [activeQrPayload]);
+  }, [activeQrPayload, theme]);
 
   const stages = activeStages.length > 0 ? activeStages : PLACEHOLDER_STAGES;
 

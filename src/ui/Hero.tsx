@@ -29,7 +29,7 @@ const HERO_CARDS: HeroCard[] = [
   {
     id: 'gamified',
     title: 'Gamified Dev Experience',
-    pitch: 'Earn XP, unlock voxel themes, maintain streaks, and climb the LinkZip leaderboard.',
+    pitch: 'Earn XP, keep a daily streak, and collect achievements as you compress.',
     cta: 'Play & Earn',
     icon: '🏆',
     accent: 'var(--color-xp)',

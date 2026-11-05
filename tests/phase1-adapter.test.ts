@@ -33,6 +33,20 @@ describe('Phase 1 Foundation - Adapter & Local Engine Acceptance', () => {
     expect(decomp.url).toBe(testUrl);
   });
 
+  it('emoji links and QR links decode back to the original URL', () => {
+    const comp = localCompress(testUrl);
+
+    // Emoji link, as typed and as a browser sends it (percent-encoded path).
+    expect(localDecompress(comp.emojiUrl).url).toBe(testUrl);
+    const encodedPath = comp.emojiUrl.replace(comp.emojiCode, encodeURIComponent(comp.emojiCode));
+    expect(localDecompress(encodedPath).url).toBe(testUrl);
+
+    // The QR payload is uppercase, uses the "*" marker, and decodes too.
+    expect(comp.qrPayload).toBe(comp.qrPayload.toUpperCase());
+    expect(comp.qrPayload).toMatch(/\/\*[0-9A-Z$+*.-]+$/);
+    expect(localDecompress(comp.qrPayload).url).toBe(testUrl);
+  });
+
   it('extractPayload and localDecompress handle full short links, localhost URLs, hash routing, and query parameters', () => {
     const code = '144fWYB4XvoHE2CZgUN5F9e5HDJMzPPHM';
 

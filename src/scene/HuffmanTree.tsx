@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { Html } from '@react-three/drei';
 import { useSceneStore } from '../state/sceneStore';
+import { useSceneTheme } from './sceneTheme';
 
 interface TreeNode {
   id: string;
@@ -16,6 +17,7 @@ interface TreeNode {
 
 export const HuffmanTree: React.FC = () => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
+  const colors = useSceneTheme();
   const activeStages = useSceneStore((s) => s.activeStages);
   const scrollProgress = useSceneStore((s) => s.scrollProgress);
   const collapseProgress = useSceneStore((s) => s.collapseProgress);
@@ -121,9 +123,9 @@ export const HuffmanTree: React.FC = () => {
       >
         <sphereGeometry args={[1, 16, 16]} />
         <meshStandardMaterial
-          color="#6CF2C2"
-          emissive="#6CF2C2"
-          emissiveIntensity={0.4}
+          color={colors.treeNode}
+          emissive={colors.treeNode}
+          emissiveIntensity={colors.additive ? 0.4 : 0.1}
           roughness={0.2}
           metalness={0.8}
         />
@@ -132,7 +134,7 @@ export const HuffmanTree: React.FC = () => {
       {/* Connecting Branch Segments */}
       <lineSegments geometry={lineGeometry}>
         <lineBasicMaterial
-          color="#7C8CFF"
+          color={colors.treeLine}
           transparent
           opacity={0.4 * (1.0 - collapseProgress)}
         />
@@ -143,8 +145,8 @@ export const HuffmanTree: React.FC = () => {
         <Html position={[hoveredNode.position.x, hoveredNode.position.y + 0.3, hoveredNode.position.z]}>
           <div
             style={{
-              background: 'rgba(20, 24, 33, 0.9)',
-              border: '1px solid var(--color-accent)',
+              background: 'var(--color-panel)',
+              border: '1px solid var(--color-accent-line)',
               borderRadius: 'var(--radius-sm)',
               padding: '6px 12px',
               fontFamily: 'var(--font-mono)',
@@ -152,12 +154,12 @@ export const HuffmanTree: React.FC = () => {
               color: 'var(--color-text)',
               whiteSpace: 'nowrap',
               pointerEvents: 'none',
-              boxShadow: '0 4px 16px rgba(0,0,0,0.5)'
+              boxShadow: '0 4px 16px var(--shadow-color)'
             }}
           >
             <strong>{hoveredNode.label}</strong>
             {hoveredNode.savedBits > 0 && (
-              <div style={{ color: 'var(--color-accent)' }}>
+              <div style={{ color: 'var(--color-accent-text)' }}>
                 -{hoveredNode.savedBits} bits saved
               </div>
             )}

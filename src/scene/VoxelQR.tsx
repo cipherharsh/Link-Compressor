@@ -5,6 +5,11 @@ import * as THREE from 'three';
 import { useFrame } from '@react-three/fiber';
 import { useSceneStore } from '../state/sceneStore';
 import { useGameStore } from '../state/gameStore';
+import { useThemeStore } from '../state/themeStore';
+import { SCENE_THEMES, FLAT_QR } from './sceneTheme';
+
+const QR_WIDTH = 3.2; // world units across the module grid
+const QUIET_ZONE = 4; // modules of empty border required for scanning
 
 interface VoxelData {
   r: number;
@@ -21,6 +26,8 @@ export const VoxelQR: React.FC = () => {
   const collapseProgress = useSceneStore((s) => s.collapseProgress);
   const flattenQR = useSceneStore((s) => s.flattenQR);
   const recordScanReady = useGameStore((s) => s.recordScanReady);
+  const theme = useThemeStore((s) => s.theme);
+  const colors = SCENE_THEMES[theme];
 
   const [pulseTime, setPulseTime] = useState<number>(0);
   const [matrixData, setMatrixData] = useState<boolean[][] | null>(null);
@@ -91,12 +98,12 @@ export const VoxelQR: React.FC = () => {
       pulseScale = 1.0 + Math.sin((pulseDelta / 0.25) * Math.PI) * 0.04;
     }
 
-    const baseScale = (3.2 / size) * pulseScale * effectiveVisibility;
+    const baseScale = (QR_WIDTH / size) * pulseScale * effectiveVisibility;
     const offset = size / 2;
 
     voxels.forEach((v, i) => {
-      const posX = (v.c - offset) * (3.2 / size);
-      const posY = (offset - v.r) * (3.2 / size);
+      const posX = (v.c - offset) * (QR_WIDTH / size);
+      const posY = (offset - v.r) * (QR_WIDTH / size);
 
       // Height variation (flat in flatten mode for maximum scanning contrast)
       const ripple = Math.sin(time * 3.0 - (v.r + v.c) * 0.2) * 0.1;
@@ -120,6 +127,10 @@ export const VoxelQR: React.FC = () => {
 
   if (voxels.length === 0) return null;
 
+  // Flattened, the QR must scan: dark modules on white with a full quiet zone.
+  const ink = FLAT_QR.ink[theme];
+  const planeSize = flattenQR ? (size + QUIET_ZONE * 2) * (QR_WIDTH / size) : QR_WIDTH + 0.4;
+
   return (
     <group ref={groupRef} position={[0, -0.2, 0]} onClick={handleClick}>
       {/* Voxel modules */}
@@ -129,18 +140,19 @@ export const VoxelQR: React.FC = () => {
       >
         <boxGeometry args={[1, 1, 1]} />
         <meshStandardMaterial
-          color={flattenQR ? '#FFFFFF' : '#6CF2C2'}
-          emissive={flattenQR ? '#FFFFFF' : '#6CF2C2'}
-          emissiveIntensity={flattenQR ? 0.8 : 0.3}
-          roughness={flattenQR ? 0.9 : 0.2}
-          metalness={flattenQR ? 0.1 : 0.6}
+          color={flattenQR ? ink : colors.voxel}
+          emissive={flattenQR ? ink : colors.voxel}
+          emissiveIntensity={flattenQR ? 0 : colors.voxelEmissive}
+          roughness={flattenQR ? 1 : 0.2}
+          metalness={flattenQR ? 0 : 0.6}
         />
       </instancedMesh>
 
-      {/* QR Background Plane for high contrast scanning */}
+      {/* Backing plane: theme background normally, white paper when flattened for scanning */}
       <mesh position={[0, 0, -0.02]}>
-        <planeGeometry args={[3.6, 3.6]} />
-        <meshBasicMaterial color="#0B0D12" />
+        <planeGeometry args={[planeSize, planeSize]} />
+        {/* No tone mapping: the plane must match the page/paper colour exactly. */}
+        <meshBasicMaterial color={flattenQR ? FLAT_QR.paper : colors.fog} toneMapped={false} />
       </mesh>
     </group>
   );

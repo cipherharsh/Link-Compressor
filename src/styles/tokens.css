@@ -1,22 +1,54 @@
 /* Design tokens, document reset, and base element styles. */
 
+/*
+ * Colour roles (dark theme is the default; light overrides follow below):
+ *   accent       neon lime brand fill (buttons, active tab, badges)
+ *   accent-text  brand colour that is safe for text on the background
+ *   accent-line  brand colour for active borders and outlines
+ *   on-accent    text placed on an accent fill
+ *   accent-2     secondary ink (ivory on dark, midnight navy on light)
+ *   xp / danger  crimson, for streaks, XP, and errors
+ */
 :root {
-  /* Colors */
-  --color-bg: #0B0D12;
-  --color-surface: #141821;
-  --color-surface-hover: #1c2230;
-  --color-surface-glass: rgba(20, 24, 33, 0.75);
-  --color-border: rgba(255, 255, 255, 0.08);
-  --color-border-glow: rgba(108, 242, 194, 0.3);
-  --color-text: #F2F4F8;
-  --color-muted: #8A93A6;
-  --color-accent: #6CF2C2;
-  --color-accent-dim: rgba(108, 242, 194, 0.15);
-  --color-accent-2: #7C8CFF;
-  --color-accent-2-dim: rgba(124, 140, 255, 0.15);
-  --color-danger: #FF6B81;
-  --color-xp: #FFD166;
-  --color-xp-dim: rgba(255, 209, 102, 0.15);
+  color-scheme: dark;
+
+  --color-bg: #06110C;
+  --color-surface: #171717;
+  --color-surface-hover: #202020;
+  --color-surface-glass: rgba(23, 23, 23, 0.8);
+  --color-panel: rgba(23, 23, 23, 0.98);
+  --color-input: #0C1D14;
+  --color-border: rgba(205, 242, 43, 0.12);
+  --color-border-glow: rgba(205, 242, 43, 0.3);
+  --color-text: #E9E6DF;
+  --color-heading: #F4F1EC;
+  --color-muted: #98A096;
+
+  --color-accent: #CDF22B;
+  --color-accent-text: #CDF22B;
+  --color-accent-line: #CDF22B;
+  --color-on-accent: #06110C;
+  --color-accent-dim: rgba(205, 242, 43, 0.14);
+  --color-accent-glow: rgba(205, 242, 43, 0.28);
+  --color-accent-2: #F4F1EC;
+  --color-on-accent-2: #06110C;
+  --color-accent-2-dim: rgba(244, 241, 236, 0.1);
+
+  --color-danger: #E5534B;
+  --color-danger-dim: rgba(229, 83, 75, 0.14);
+  --color-xp: #E5534B;
+  --color-xp-dim: rgba(229, 83, 75, 0.14);
+  --color-xp-glow: rgba(229, 83, 75, 0.55);
+  --color-xp-fill: #A31C18;
+  --color-on-xp: #FFFFFF;
+
+  --color-tint: rgba(255, 255, 255, 0.05);
+  --color-tint-strong: rgba(255, 255, 255, 0.1);
+  --color-overlay: rgba(6, 17, 12, 0.96);
+  --color-scrim: rgba(6, 17, 12, 0.8);
+  --color-header-scrim: rgba(6, 17, 12, 0.6);
+  --shadow-color: rgba(0, 0, 0, 0.55);
+  --shadow-color-soft: rgba(0, 0, 0, 0.3);
 
   /* Typography */
   --font-display: 'Space Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -65,6 +97,50 @@
   --z-modal: 1000;
   --z-loader: 2000;
   --z-toast: 3000;
+}
+
+/* Light theme: soft ivory, midnight navy ink, neon lime fills, crimson alerts. */
+[data-theme="light"] {
+  color-scheme: light;
+
+  --color-bg: #FAF8F3;
+  --color-surface: #FFFFFF;
+  --color-surface-hover: #F3F0E7;
+  --color-surface-glass: rgba(255, 255, 255, 0.82);
+  --color-panel: rgba(255, 255, 255, 0.98);
+  --color-input: #F3F0E7;
+  --color-border: rgba(8, 9, 139, 0.14);
+  --color-border-glow: rgba(8, 9, 139, 0.3);
+  --color-text: #1D1F4D;
+  --color-heading: #08098B;
+  --color-muted: #5C5E80;
+
+  /* Lime is unreadable as text on ivory (1.2:1), so text and lines use navy. */
+  --color-accent: #CDF22B;
+  --color-accent-text: #08098B;
+  --color-accent-line: #08098B;
+  --color-on-accent: #08098B;
+  --color-accent-dim: rgba(205, 242, 43, 0.45);
+  --color-accent-glow: rgba(205, 242, 43, 0.55);
+  --color-accent-2: #08098B;
+  --color-on-accent-2: #FAF8F3;
+  --color-accent-2-dim: rgba(8, 9, 139, 0.08);
+
+  --color-danger: #A31C18;
+  --color-danger-dim: rgba(163, 28, 24, 0.08);
+  --color-xp: #A31C18;
+  --color-xp-dim: rgba(163, 28, 24, 0.08);
+  --color-xp-glow: rgba(163, 28, 24, 0.3);
+  --color-xp-fill: #A31C18;
+  --color-on-xp: #FFFFFF;
+
+  --color-tint: rgba(8, 9, 139, 0.04);
+  --color-tint-strong: rgba(8, 9, 139, 0.08);
+  --color-overlay: rgba(250, 248, 243, 0.97);
+  --color-scrim: rgba(29, 31, 77, 0.35);
+  --color-header-scrim: rgba(250, 248, 243, 0.75);
+  --shadow-color: rgba(8, 9, 139, 0.14);
+  --shadow-color-soft: rgba(8, 9, 139, 0.08);
 }
 
 *,

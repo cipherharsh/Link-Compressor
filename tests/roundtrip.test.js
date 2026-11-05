@@ -20,25 +20,28 @@ import urls from './test-urls.js';
   const compressionRatios = [];
 
   for (const url of urls) {
-    for (const mode of ['ascii', 'qr']) {
+    for (const mode of ['ascii', 'qr', 'emoji']) {
       totalTests++;
       try {
         const result = encode(url, mode);
         const encodedStr = result.encoded;
-        const decoded = decode(encodedStr, mode);
-        
+        // Browsers percent-encode emoji in paths; decoding must survive that trip.
+        const asReceived = mode === 'emoji' ? decodeURIComponent(encodeURIComponent(encodedStr)) : encodedStr;
+        const decoded = decode(asReceived, mode);
+
         if (decoded !== url) {
           failed++;
           failures.push({ url, mode, expected: url, actual: decoded });
         } else {
           passed++;
         }
-        
-        const ratio = encodedStr.length / url.length;
+
+        const symbols = [...encodedStr].length;
+        const ratio = symbols / url.length;
         compressionRatios.push(ratio);
-        
-        if (encodedStr.length > url.length) {
-          expanded.push({ url, mode, originalLen: url.length, encodedLen: encodedStr.length });
+
+        if (symbols > url.length) {
+          expanded.push({ url, mode, originalLen: url.length, encodedLen: symbols });
         }
         
       } catch (err) {

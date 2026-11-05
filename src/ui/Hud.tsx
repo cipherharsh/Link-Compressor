@@ -10,8 +10,6 @@ const Hud: React.FC = () => {
   const handle = useGameStore((s) => s.handle);
   const streakDays = useGameStore((s) => s.streakDays);
   const bytesSavedSession = useGameStore((s) => s.bytesSavedSession);
-  const isMuted = useGameStore((s) => s.isMuted);
-  const toggleMute = useGameStore((s) => s.toggleMute);
   const activeNotices = useGameStore((s) => s.activeNotices);
   const clearNotice = useGameStore((s) => s.clearNotice);
 
@@ -119,15 +117,6 @@ const Hud: React.FC = () => {
                   </button>
 
                   <div className="hud-controls">
-                    <button
-                      className={`hud-icon-btn${isMuted ? ' is-muted' : ''}`}
-                      onClick={toggleMute}
-                      title={isMuted ? 'Unmute SFX' : 'Mute SFX'}
-                      aria-label={isMuted ? 'Unmute SFX' : 'Mute SFX'}
-                    >
-                      {isMuted ? '🔇' : '🔊'}
-                    </button>
-
                     {webglSupported && (
                       <button
                         className={`hud-flatten-btn${flattenQR ? ' is-active' : ''}`}

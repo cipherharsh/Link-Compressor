@@ -32,8 +32,8 @@ const PIPELINE_STAGES = [
   {
     step: '04',
     title: 'QR Alphanumeric Serializer',
-    desc: 'Generates ISO/IEC 18004 alphanumeric codes for 30% denser, phone-scannable QR codes.',
-    savings: '1-2 QR versions lower',
+    desc: 'Writes the QR link in ISO/IEC 18004 alphanumeric mode, which packs 5.5 bits per character instead of 8.',
+    savings: 'Often 1 QR version smaller',
   },
 ];
 

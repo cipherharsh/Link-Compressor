@@ -5,7 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>LinkZip — 3D Gamified URL Compressor & QR Optimizer</title>
   <meta name="description" content="A live, real-time, 3D, gamified client-side URL compressor and QR optimizer. Watch long links collapse into compact voxel QR codes with zero backend.">
-  
+
+  <!-- Apply the saved (or device) colour theme before first paint to avoid a flash. -->
+  <script>
+    (function () {
+      var theme = 'dark';
+      try {
+        var saved = localStorage.getItem('linkzip_theme');
+        if (saved === 'light' || saved === 'dark') theme = saved;
+        else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) theme = 'light';
+      } catch (e) { /* storage blocked: keep dark */ }
+      document.documentElement.dataset.theme = theme;
+    })();
+  </script>
+
   <!-- Preconnect & Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -3,8 +3,9 @@
 export type HuffmanTable = Record<string, string>;
 
 export const subalphabets: string[];
-export const outputAlphabetASCII: string;
-export const outputAlphabetQR: string;
+export const outputAlphabetASCII: string[];
+export const outputAlphabetQR: string[];
+export const outputAlphabetEmoji: string[];
 export function buildHuffmanTable(symbols: string[]): HuffmanTable;
 export const TLD_LIST: string[];
 export const DOMAIN_LIST: string[];

@@ -109,6 +109,15 @@
       const outputAlphabetQR =
         "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ$-+*.".split("");
 
+      // Must match EMOJI_RANGES in src/alphabets.js exactly (same ranges, same order).
+      const outputAlphabetEmoji = [
+        [0x1F400, 0x1F43E], [0x1F440, 0x1F440], [0x1F442, 0x1F4FC], [0x1F500, 0x1F504]
+      ].flatMap(([start, end]) =>
+        Array.from({ length: end - start + 1 }, (_, i) => String.fromCodePoint(start + i)));
+
+      // QR links put this marker before their QR-alphabet code.
+      const QR_CODE_MARKER = "*";
+
       function buildHuffmanTable(symbols) {
         if (!symbols || symbols.length === 0) return { encode: {}, decode: {} };
         if (symbols.length === 1) return { encode: { [symbols[0]]: "0" }, decode: { "0": symbols[0] } };
@@ -332,9 +341,24 @@
       }
 
       function decode(str, mode) {
-        const alphabet = mode === "qr" ? outputAlphabetQR : outputAlphabetASCII;
+        const alphabet = mode === "qr" ? outputAlphabetQR
+          : mode === "emoji" ? outputAlphabetEmoji
+          : outputAlphabetASCII;
         const bits = stringToBits(str, alphabet);
         return decompress(bits);
+      }
+
+      // Decode any LinkZip code: QR links ("*" + QR alphabet), emoji links, or classic links.
+      function decodeAny(raw) {
+        let code = raw;
+        try { code = decodeURIComponent(raw); } catch { /* keep raw */ }
+        if (code.startsWith(QR_CODE_MARKER)) return decode(code.slice(QR_CODE_MARKER.length), "qr");
+        if (/[^\x00-\x7F]/.test(code)) return decode(code, "emoji");
+        try {
+          const url = decode(code, "ascii");
+          if (/^https?:\/\//i.test(url)) return url;
+        } catch { /* fall through to the legacy QR alphabet */ }
+        return decode(code, "qr");
       }
 
       // ── Extraction and Redirection Logic ──────────────────────────────────────
@@ -373,12 +397,7 @@
       }
 
       try {
-        let url;
-        try {
-          url = decode(payload, "ascii");
-        } catch {
-          url = decode(payload, "qr");
-        }
+        const url = decodeAny(payload);
 
         if (!/^https?:\/\//i.test(url)) {
           throw new Error("Decoded value is not a valid HTTP/HTTPS URL");

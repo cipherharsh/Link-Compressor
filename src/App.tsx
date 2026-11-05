@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useSceneStore } from './state/sceneStore';
+import { useThemeStore } from './state/themeStore';
 import { localDecompress } from './engine/localCompress';
 import Loader from './ui/Loader';
 import Fallback2D from './ui/Fallback2D';
@@ -8,7 +9,6 @@ import Chapters from './ui/Chapters';
 import Hud from './ui/Hud';
 import Playground from './ui/Playground';
 import Stats from './ui/Stats';
-import { Marquee } from './ui/Marquee';
 import { Faq } from './ui/Faq';
 import { MenuOverlay } from './ui/MenuOverlay';
 import Footer from './ui/Footer';
@@ -16,6 +16,19 @@ import LiveCounterStrip from './ui/LiveCounterStrip';
 
 // Labels for the progress indicator, matching the on-page section order.
 const CHAPTER_LABELS = ['', 'Compress', 'Overview', 'Pipeline', 'Join'];
+
+const SunIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden="true">
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </svg>
+);
+
+const MoonIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+  </svg>
+);
 
 /** Reads a compressed code from the current URL (path, hash, or query), if present. */
 function readCompressedCandidate(): string {
@@ -40,6 +53,9 @@ export const App: React.FC = () => {
   const scrollProgress = useSceneStore((s) => s.scrollProgress);
   const webglSupported = useSceneStore((s) => s.webglSupported);
   const loaderFinished = useSceneStore((s) => s.loaderFinished);
+
+  const theme = useThemeStore((s) => s.theme);
+  const toggleTheme = useThemeStore((s) => s.toggleTheme);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const isHeaderSolid = scrollProgress > 0.02;
@@ -86,6 +102,14 @@ export const App: React.FC = () => {
         <div className="site-header__group">
           <Hud />
           <button
+            className="theme-toggle"
+            onClick={toggleTheme}
+            aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
+            title={theme === 'dark' ? 'Light theme' : 'Dark theme'}
+          >
+            {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+          </button>
+          <button
             className="btn-pill menu-trigger"
             onClick={() => setIsMenuOpen(true)}
             aria-label="Open navigation menu"
@@ -113,14 +137,13 @@ export const App: React.FC = () => {
                 <div className="eyebrow">Client-side URL compressor</div>
                 <h1 className="compressor-title">Shrink any link into a tiny, scannable code.</h1>
               </div>
-              {!webglSupported && <Fallback2D />}
               <Playground />
+              {!webglSupported && <Fallback2D />}
             </div>
           }
           join={
             <div className="chapter-inner--join">
               <Stats />
-              <Marquee />
               <Faq />
               <Footer />
             </div>

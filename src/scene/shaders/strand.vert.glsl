@@ -5,6 +5,8 @@ uniform float uProgress;
 uniform float uCollapse;
 uniform float uLength;
 uniform float uPixelRatio;
+uniform vec3 uColorA; // ribbon start colour (theme)
+uniform vec3 uColorB; // ribbon end colour (theme)
 
 attribute float aRandom;
 attribute float aProgress;
@@ -41,10 +43,8 @@ void main() {
   float baseSize = mix(28.0, 16.0, uCollapse);
   gl_PointSize = (baseSize * uPixelRatio * (0.8 + aRandom * 0.4)) / -mvPosition.z;
 
-  // Color transition along ribbon: Accent (#6CF2C2) to Accent-2 (#7C8CFF)
-  vec3 colorA = vec3(0.424, 0.949, 0.761); // #6CF2C2
-  vec3 colorB = vec3(0.486, 0.549, 1.000); // #7C8CFF
-  vColor = mix(colorA, colorB, aProgress + sin(uTime + aRandom * 6.28) * 0.2);
+  // Colour transition along the ribbon between the two theme colours.
+  vColor = mix(uColorA, uColorB, aProgress + sin(uTime + aRandom * 6.28) * 0.2);
 
   vAlpha = isVisible * mix(0.85, 0.2, uCollapse);
 }
