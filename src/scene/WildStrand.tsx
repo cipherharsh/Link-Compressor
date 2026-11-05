@@ -1,17 +1,11 @@
-/*
- * PURPOSE: Interactive 3D particle strand representing the uncompressed "wild" URL ribbon.
- * INPUTS: Uniform values (uTime, uProgress, uCollapse, uLength), device tier particle counts.
- * OUTPUTS: Instantiated Points object with custom ShaderMaterial attached to the R3F scene.
- * DEPENDS_ON: React, Three.js, R3F, strand.vert.glsl, strand.frag.glsl, sceneStore.ts.
- * WHY_THIS_DESIGN: Spline-distributed particles with curl-noise shaders convey link length and entropy organically.
- */
+/** Interactive particle strand representing the uncompressed URL ribbon. */
 
 import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';
 import { useFrame, useThree } from '@react-three/fiber';
 import { useSceneStore } from '../state/sceneStore';
-import vertShader from './shaders/strand.vert.glsl';
-import fragShader from './shaders/strand.frag.glsl';
+import vertShader from './shaders/strand.vert.glsl?raw';
+import fragShader from './shaders/strand.frag.glsl?raw';
 
 export const WildStrand: React.FC = () => {
   const pointsRef = useRef<THREE.Points>(null);

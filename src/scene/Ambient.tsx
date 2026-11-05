@@ -1,10 +1,4 @@
-/*
- * PURPOSE: Ambient background dust particles and atmospheric fog providing depth in 3D scene.
- * INPUTS: Uniform particle positions (1500 count), frame tick.
- * OUTPUTS: Instantiated Points mesh and three fog attached to scene.
- * DEPENDS_ON: React, Three.js, R3F.
- * WHY_THIS_DESIGN: Low particle count (1500) ensures rich atmospheric depth with negligible draw call cost.
- */
+/** Ambient background dust particles and fog for scene depth. */
 
 import React, { useMemo, useRef, useEffect } from 'react';
 import * as THREE from 'three';

@@ -1,10 +1,4 @@
-/*
- * PURPOSE: Extruded 3D Voxel QR Code with ripple reveal, interactive pulse, and top-down scan mode.
- * INPUTS: Boolean matrix computed by qrMatrix.worker, flattenQR state, collapse timeline.
- * OUTPUTS: InstancedMesh rendering dark QR modules with height variance and scan safety view.
- * DEPENDS_ON: React, Three.js, R3F, sceneStore.ts, gameStore.ts.
- * WHY_THIS_DESIGN: Instanced boxes create a tactile voxel look while Flatten mode allows direct camera scanning.
- */
+/** Extruded 3D voxel QR code with ripple reveal and top-down flatten/scan mode. */
 
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';

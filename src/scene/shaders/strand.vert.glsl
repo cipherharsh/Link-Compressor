@@ -1,10 +1,4 @@
-/*
- * PURPOSE: Vertex shader for WildStrand particles with curl-noise displacement and collapse kinematics.
- * INPUTS: Attributes: position, aRandom, aIndex. Uniforms: uTime, uProgress, uCollapse, uLength, uPixelRatio.
- * OUTPUTS: gl_Position and vColor/vAlpha for fragment shading.
- * DEPENDS_ON: Three.js WebGLRenderer.
- * WHY_THIS_DESIGN: GPU-accelerated procedural curl noise ensures fluid 60fps ribbons without CPU geometry updates.
- */
+// Vertex shader: curl-noise displacement and collapse kinematics for strand particles.
 
 uniform float uTime;
 uniform float uProgress;

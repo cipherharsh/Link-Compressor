@@ -1,10 +1,4 @@
-/*
- * PURPOSE: GSAP-driven 1.8s collapse animation coordinating WildStrand, HuffmanTree, and VoxelQR.
- * INPUTS: Successful compression response event, duration (1.8s).
- * OUTPUTS: Frame-by-frame collapse progress value streamed into sceneStore.
- * DEPENDS_ON: gsap, sceneStore.ts.
- * WHY_THIS_DESIGN: Deterministic GSAP easing guarantees 1.8s multi-stage collapse matching user specification.
- */
+/** GSAP-driven 1.8s collapse animation streaming progress into the scene store. */
 
 import gsap from 'gsap';
 import { useSceneStore } from '../state/sceneStore';

@@ -17,11 +17,11 @@
     "noFallthroughCasesInSwitch": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "allowJs": true,
+    "allowJs": false,
     "esModuleInterop": true,
     "paths": {
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.js", "vite-env.d.ts"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite-env.d.ts"]
 }

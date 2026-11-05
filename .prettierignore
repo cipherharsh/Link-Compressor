@@ -1,0 +1,7 @@
+dist
+node_modules
+coverage
+legacy
+extension
+package-lock.json
+*.glsl

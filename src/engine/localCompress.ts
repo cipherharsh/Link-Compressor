@@ -1,10 +1,4 @@
-/*
- * PURPOSE: Local in-browser compression engine wrapper matching the backend API contract.
- * INPUTS: Plain URLs, short links, compressed codes, or local game stats requests.
- * OUTPUTS: Normalized compression payloads with short URLs, QR payloads, and pipeline stage metrics.
- * DEPENDS_ON: src/compress.js, src/config.js.
- * WHY_THIS_DESIGN: Enables zero-backend offline capability, robust payload extraction, and seamless fallback.
- */
+/** Local in-browser compression engine, wrapping compress.js / config.js in the UI contract. */
 
 import { encode, decode } from '../compress.js';
 import { getDomain } from '../config.js';

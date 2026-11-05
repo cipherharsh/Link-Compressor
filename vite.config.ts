@@ -7,7 +7,6 @@ export default defineConfig({
   resolve: {
     alias: { '@': path.resolve(import.meta.dirname, './src') },
   },
-  assetsInclude: ['**/*.glsl'],
   build: {
     rollupOptions: {
       input: { main: path.resolve(import.meta.dirname, 'index.html') },

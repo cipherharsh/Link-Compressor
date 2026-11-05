@@ -3,15 +3,15 @@
  *       analytics, badge, and settings panel.
  */
 
-import { encode, decode }                    from "./compress.js";
-import { generateQR, renderToCanvas, renderToSVG, downloadPNG, downloadSVG } from "./qrcode.js";
+import { encode, decode }                    from "../src/compress.js";
+import { generateQR, renderToCanvas, renderToSVG, downloadPNG, downloadSVG } from "../src/qrcode.js";
 import { analyzeCompression, renderBreakdownHTML } from "./analytics.js";
 import { generateBadge, badgeSnippets }      from "./badge.js";
 import {
   getDomain, setDomain, getDomainProfiles, addDomainProfile, removeDomainProfile,
   getErrorCorrectionLevel, setErrorCorrectionLevel,
   getTheme, setTheme,
-} from "./config.js";
+} from "../src/config.js";
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DOM references

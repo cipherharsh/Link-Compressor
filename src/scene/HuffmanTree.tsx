@@ -1,10 +1,4 @@
-/*
- * PURPOSE: 3D hierarchical tree visualizer rendering compression stages and Huffman dictionary hits.
- * INPUTS: Active pipeline stages, scroll narrative progress (chapter 2), hover interactions.
- * OUTPUTS: InstancedMesh spheres connected by line segments with interactive drei Html callouts.
- * DEPENDS_ON: React, Three.js, R3F, drei Html, sceneStore.ts.
- * WHY_THIS_DESIGN: Instanced rendering combines 3D branch architecture with HTML tooltips for zero overhead.
- */
+/** 3D tree visualizer for the compression stages / Huffman dictionary hits. */
 
 import React, { useMemo, useRef, useState, useEffect } from 'react';
 import * as THREE from 'three';

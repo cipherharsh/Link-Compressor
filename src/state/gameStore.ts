@@ -1,10 +1,4 @@
-/*
- * PURPOSE: Central gamification store managing XP, leveling, streaks, unlocks, and achievements.
- * INPUTS: Compression actions, decoding actions, streak ticks, and player profile updates.
- * OUTPUTS: Observable reactive state persisted to localStorage with automatic formula evaluation.
- * DEPENDS_ON: zustand.
- * WHY_THIS_DESIGN: Local persistence guarantees player progress survives page reloads with zero latency.
- */
+/** Zustand store for gamification: XP, levels, streaks, achievements (persisted to localStorage). */
 
 import { create } from 'zustand';
 

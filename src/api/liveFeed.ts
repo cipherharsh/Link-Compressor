@@ -1,10 +1,4 @@
-/*
- * PURPOSE: Resilient real-time live feed subscribing to SSE/WebSocket with 10s polling fallback and rate-limited toasts.
- * INPUTS: Remote stream /api/live or periodic /api/stats responses, online/offline network events.
- * OUTPUTS: Throttled activity events (max 1 per 6s) and live counter updates dispatched to UI listeners.
- * DEPENDS_ON: adapter.ts, localCompress.ts.
- * WHY_THIS_DESIGN: Unified interface guarantees real-time metrics when backend is live while surviving offline disconnects without crashing.
- */
+/** Simulated live activity feed: periodic stats updates and rate-limited activity events. */
 
 import { api, type StatsResponse } from './adapter';
 

@@ -1,10 +1,4 @@
-/*
- * PURPOSE: Reactive 3D scene state coordinating camera, shaders, collapse timelines, and device capability.
- * INPUTS: Scroll delta events, compress lifecycle triggers, FPS monitor telemetry.
- * OUTPUTS: Normalized scene properties consumed by R3F canvas components and HUD indicators.
- * DEPENDS_ON: zustand, localCompress.ts.
- * WHY_THIS_DESIGN: Isolates high-frequency render state so canvas updates do not trigger unnecessary DOM re-renders.
- */
+/** Zustand store for 3D scene state: camera, scroll progress, collapse timeline, capability. */
 
 import { create } from 'zustand';
 import type { CompressionStage } from '../engine/localCompress';

@@ -3,7 +3,7 @@
  *       compression ratio, and optional personal‑best indicators.
  */
 
-import { getPersonalBests, recordCompressionResult } from "./config.js";
+import { getPersonalBests, recordCompressionResult } from "../src/config.js";
 
 // ── SVG Badge ────────────────────────────────────────────────────────────────
 

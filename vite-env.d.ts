@@ -1,16 +1,8 @@
 /// <reference types="vite/client" />
 
-declare module '*.glsl' {
-  const value: string;
-  export default value;
-}
-
-declare module '*.vert.glsl' {
-  const value: string;
-  export default value;
-}
-
-declare module '*.frag.glsl' {
+// Shaders are imported with Vite's `?raw` suffix so the GLSL source string is
+// inlined (a plain `.glsl` import would resolve to the file's URL instead).
+declare module '*.glsl?raw' {
   const value: string;
   export default value;
 }

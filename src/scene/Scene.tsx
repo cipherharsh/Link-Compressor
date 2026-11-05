@@ -1,10 +1,4 @@
-/*
- * PURPOSE: Root Three.js Canvas container orchestrating camera path, postprocessing, and 3D objects.
- * INPUTS: Scroll narrative progress, collapse events, user pointer coordinates.
- * OUTPUTS: Pinned WebGL viewport rendering WildStrand, HuffmanTree, VoxelQR, and postprocessing.
- * DEPENDS_ON: React, R3F, drei (PerformanceMonitor, OrbitControls), postprocessing, sceneStore.ts.
- * WHY_THIS_DESIGN: Adaptive quality monitoring and camera spline motion deliver smooth 60fps across devices.
- */
+/** Root R3F canvas: camera rig, postprocessing, and the 3D scene objects. */
 
 import React, { useMemo, Suspense } from 'react';
 import * as THREE from 'three';

@@ -117,9 +117,8 @@ The included Chrome extension lets you compress URLs without opening the web app
 ## File Structure
 
 ```
-├── index.html              Main web app UI
-├── 404.html                Redirect/decode page
-├── style.css               Responsive stylesheet
+├── index.html              Vite entry for the 3D React app
+├── 404.html                Redirect/decode page (inlined decode engine)
 ├── CNAME                   Custom domain (edit this)
 ├── LICENSE                 MIT
 ├── src/
@@ -128,9 +127,15 @@ The included Chrome extension lets you compress URLs without opening the web app
 │   ├── standalone.js       Re-export for 404.html & extension
 │   ├── qrcode.js           QR code generator (alphanumeric mode)
 │   ├── config.js           Domain profiles & settings (localStorage)
-│   ├── main.js             UI event wiring
-│   ├── analytics.js        Compression breakdown panel
-│   └── badge.js            Shareable compression badges
+│   ├── *.d.ts              Type declarations for the JS engine above
+│   ├── api/                UI-facing adapter (zero-backend)
+│   ├── engine/             Typed engine wrapper + QR matrix worker
+│   ├── scene/              Three.js / R3F scene, shaders, timeline
+│   ├── state/              Zustand stores (scene + gamification)
+│   ├── styles/             tokens.css (design tokens) + app.css (components)
+│   ├── ui/                 React UI components
+│   └── main.tsx            React entry point
+├── legacy/                 Archived vanilla UI (index.html, style.css, main.js, …)
 ├── extension/
 │   ├── manifest.json       Chrome MV3 manifest
 │   ├── background.js       Context menu service worker
@@ -139,6 +144,7 @@ The included Chrome extension lets you compress URLs without opening the web app
 │   └── standalone-bundle.js IIFE bundle of the compression engine
 └── tests/
     ├── roundtrip.test.js   Round-trip accuracy tests
+    ├── phase*.test.ts      Adapter, loader, scene, scroll, gamification, content, live
     └── test-urls.js        100+ real-world test URLs
 ```
 
@@ -228,21 +234,19 @@ npm run build
 npm run test:all
 ```
 
-### Environment Variables & Switching API Endpoints
+### Zero-Backend Architecture
 
-The frontend uses the adapter pattern in `src/api/adapter.ts`:
+LinkZip has no backend. The UI talks to a thin adapter in `src/api/adapter.ts`, which runs
+the in-browser compression engine (`src/engine/localCompress.ts`) directly — there is no remote
+API to configure, no network round-trip, and no data leaves the browser.
 
-| Variable | Default | Description |
-|---|---|---|
-| `VITE_API_BASE_URL` | `""` (empty) | Base URL for remote API backend. If left empty, LinkZip automatically runs in zero-backend **Offline Mode** using `localCompress.ts`. |
+### Code Quality
 
-To connect to a custom backend:
-1. Create a `.env` or `.env.local` file:
-   ```env
-   VITE_API_BASE_URL=https://api.yourdomain.com
-   ```
-2. Restart the dev server or run `npm run build`.
-3. If the remote endpoint is unreachable or times out (8s limit), LinkZip gracefully falls back to local in-browser compression without interrupting the user.
+```bash
+npm run typecheck   # strict TypeScript, no emit
+npm run lint        # oxlint (fast, TS-7 compatible)
+npm run format      # Prettier write
+```
 
 ---
 
