@@ -14,6 +14,9 @@ import { MenuOverlay } from './ui/MenuOverlay';
 import Footer from './ui/Footer';
 import LiveCounterStrip from './ui/LiveCounterStrip';
 
+// Labels for the progress indicator, matching the on-page section order.
+const CHAPTER_LABELS = ['', 'Compress', 'Overview', 'Pipeline', 'Join'];
+
 /** Reads a compressed code from the current URL (path, hash, or query), if present. */
 function readCompressedCandidate(): string {
   const { pathname, hash, search } = window.location;
@@ -34,11 +37,12 @@ function readCompressedCandidate(): string {
 
 export const App: React.FC = () => {
   const currentChapter = useSceneStore((s) => s.currentChapter);
-  const chapterLabel = useSceneStore((s) => s.chapterLabel);
+  const scrollProgress = useSceneStore((s) => s.scrollProgress);
   const webglSupported = useSceneStore((s) => s.webglSupported);
   const loaderFinished = useSceneStore((s) => s.loaderFinished);
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const isHeaderSolid = scrollProgress > 0.02;
 
   // If the app was loaded via a compressed short link, decode it and redirect.
   useEffect(() => {
@@ -69,7 +73,7 @@ export const App: React.FC = () => {
         {webglSupported && <Scene />}
       </div>
 
-      <header className="site-header">
+      <header className={`site-header${isHeaderSolid ? ' is-scrolled' : ''}`}>
         <div className="site-header__group">
           <span className="site-brand" aria-hidden="true">🔗</span>
           <span className="site-brand-text">LinkZip</span>
@@ -98,18 +102,22 @@ export const App: React.FC = () => {
       />
 
       <div className="chapter-progress">
-        Chapter {currentChapter} / 4 — <strong>{chapterLabel}</strong>
+        Chapter {currentChapter} / 4 — <strong>{CHAPTER_LABELS[currentChapter]}</strong>
       </div>
 
       <main>
         <Chapters
-          childrenChapter3={
-            <div id="playground" className="chapter-inner--play">
+          compressor={
+            <div id="playground" className="compressor-section">
+              <div className="compressor-intro">
+                <div className="eyebrow">Client-side URL compressor</div>
+                <h1 className="compressor-title">Shrink any link into a tiny, scannable code.</h1>
+              </div>
               {!webglSupported && <Fallback2D />}
               <Playground />
             </div>
           }
-          childrenChapter4={
+          join={
             <div className="chapter-inner--join">
               <Stats />
               <Marquee />

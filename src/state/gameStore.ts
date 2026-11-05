@@ -66,6 +66,8 @@ interface GameState {
   lastActiveDay: string | null; // YYYY-MM-DD
   bytesSavedSession: number;
   totalCompressions: number;
+  totalBytesSaved: number; // persisted across sessions
+  totalOriginalChars: number; // persisted; used to derive the average ratio
   achievements: Achievement[];
   isMuted: boolean;
   activeNotices: FloatingXpNotice[];
@@ -102,6 +104,8 @@ function saveState(state: Partial<GameState>) {
       streakDays: state.streakDays,
       lastActiveDay: state.lastActiveDay,
       totalCompressions: state.totalCompressions,
+      totalBytesSaved: state.totalBytesSaved,
+      totalOriginalChars: state.totalOriginalChars,
       achievements: state.achievements,
       isMuted: state.isMuted
     };
@@ -122,6 +126,8 @@ export const useGameStore = create<GameState>((set, get) => ({
   lastActiveDay: initialSaved.lastActiveDay || null,
   bytesSavedSession: 0,
   totalCompressions: initialSaved.totalCompressions || 0,
+  totalBytesSaved: initialSaved.totalBytesSaved || 0,
+  totalOriginalChars: initialSaved.totalOriginalChars || 0,
   achievements: initialSaved.achievements || INITIAL_ACHIEVEMENTS,
   isMuted: initialSaved.isMuted || false,
   activeNotices: [],
@@ -192,6 +198,8 @@ export const useGameStore = create<GameState>((set, get) => ({
       lastActiveDay: today,
       bytesSavedSession: s.bytesSavedSession + bytesSaved,
       totalCompressions: s.totalCompressions + 1,
+      totalBytesSaved: s.totalBytesSaved + bytesSaved,
+      totalOriginalChars: s.totalOriginalChars + originalLength,
       activeNotices: [...s.activeNotices.slice(-4), notice]
     }));
 

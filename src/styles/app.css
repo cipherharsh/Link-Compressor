@@ -28,10 +28,45 @@
   align-items: center;
   gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
+  /* At the top the header blends into the scene: a soft scrim, no hard edge. */
+  background: linear-gradient(to bottom, rgba(11, 13, 18, 0.55), rgba(11, 13, 18, 0));
+  border-bottom: 1px solid transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition: background var(--duration-ui) ease, backdrop-filter var(--duration-ui) ease,
+    border-color var(--duration-ui) ease;
+}
+
+/* Once scrolled, it firms up into a glass bar. */
+.site-header.is-scrolled {
   background: var(--color-surface-glass);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--color-border);
+  border-bottom-color: var(--color-border);
+}
+
+/* Compressor as the dedicated opening section */
+.compressor-section {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-5);
+}
+
+.compressor-intro {
+  text-align: center;
+}
+
+.compressor-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4.5vw, 3rem);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin-top: var(--space-2);
 }
 
 .site-header__group {

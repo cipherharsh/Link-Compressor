@@ -4,8 +4,10 @@ import { useSceneStore } from '../state/sceneStore';
 import Hero from './Hero';
 
 interface ChaptersProps {
-  childrenChapter3?: React.ReactNode;
-  childrenChapter4?: React.ReactNode;
+  /** The compressor panel, shown as the dedicated first section. */
+  compressor?: React.ReactNode;
+  /** The closing group (stats, reviews, FAQ, footer). */
+  join?: React.ReactNode;
 }
 
 const PIPELINE_STAGES = [
@@ -35,9 +37,10 @@ const PIPELINE_STAGES = [
   },
 ];
 
-const Chapters: React.FC<ChaptersProps> = ({ childrenChapter3, childrenChapter4 }) => {
+const Chapters: React.FC<ChaptersProps> = ({ compressor, join }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const scrollProgress = useSceneStore((s) => s.scrollProgress);
+  const currentChapter = useSceneStore((s) => s.currentChapter);
   const setScrollProgress = useSceneStore((s) => s.setScrollProgress);
 
   useEffect(() => {
@@ -72,17 +75,25 @@ const Chapters: React.FC<ChaptersProps> = ({ childrenChapter3, childrenChapter4 
     };
   }, [setScrollProgress]);
 
-  // Chapter 2 highlights one of the four stage cards based on scroll depth (0.2–0.55).
-  const stageIndex = Math.min(3, Math.max(0, Math.floor(((scrollProgress - 0.2) / 0.35) * 4)));
-  const isChapter2Active = scrollProgress >= 0.18 && scrollProgress < 0.55;
+  // The pipeline is the third section; highlight one of its four cards by scroll depth.
+  const isPipelineActive = currentChapter === 3;
+  const stageIndex = Math.min(3, Math.max(0, Math.floor(((scrollProgress - 0.55) / 0.3) * 4)));
+
+  const scrollToPipeline = () => {
+    document.getElementById('pipeline')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   return (
     <div ref={containerRef} className="chapters">
+      {/* 1. Compressor — the dedicated opening section */}
+      <section className="chapter">{compressor}</section>
+
+      {/* 2. Hero narrative */}
       <div className="chapter-hero-wrap">
-        <Hero onScrollExplore={() => scrollToSection(containerRef.current, 0.25)} />
+        <Hero onScrollExplore={scrollToPipeline} />
       </div>
 
-      {/* Chapter 2: the compression pipeline */}
+      {/* 3. The compression pipeline */}
       <section id="pipeline" className="chapter">
         <div className="chapter-inner chapter-inner--pipeline">
           <div className="eyebrow">The Four-Stage Compression Engine</div>
@@ -94,7 +105,7 @@ const Chapters: React.FC<ChaptersProps> = ({ childrenChapter3, childrenChapter4 
 
           <div className="pipeline-grid">
             {PIPELINE_STAGES.map((stage, i) => {
-              const isCurrent = isChapter2Active && stageIndex === i;
+              const isCurrent = isPipelineActive && stageIndex === i;
               return (
                 <div
                   key={stage.step}
@@ -111,20 +122,10 @@ const Chapters: React.FC<ChaptersProps> = ({ childrenChapter3, childrenChapter4 
         </div>
       </section>
 
-      {/* Chapter 3: interactive playground */}
-      <section className="chapter">{childrenChapter3}</section>
-
-      {/* Chapter 4: stats, reviews, FAQ, footer */}
-      <section className="chapter chapter--last">{childrenChapter4}</section>
+      {/* 4. Stats, reviews, FAQ, footer */}
+      <section className="chapter chapter--last">{join}</section>
     </div>
   );
 };
-
-/** Smooth-scrolls to a fraction (0–1) of the narrative container's scrollable height. */
-function scrollToSection(container: HTMLDivElement | null, targetYRatio: number) {
-  if (!container) return;
-  const totalScroll = container.scrollHeight - window.innerHeight;
-  window.scrollTo({ top: totalScroll * targetYRatio, behavior: 'smooth' });
-}
 
 export default Chapters;
