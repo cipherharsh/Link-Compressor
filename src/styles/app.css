@@ -1960,6 +1960,26 @@
   border-color: var(--color-accent-line);
 }
 
+/* Header switch between the 3D scene and the minimal 2D page; shows the view it goes to. */
+.view-toggle {
+  height: 32px;
+  min-width: 40px;
+  padding: 0 10px;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--color-border);
+  background: var(--color-tint);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--duration-micro) ease;
+}
+
+.view-toggle:hover {
+  border-color: var(--color-accent-line);
+}
+
 /* ───────────────────────── Link style + result extras ───────────────────────── */
 
 .link-style {
@@ -2420,7 +2440,17 @@
   }
 
   .hud-trigger-handle {
-    max-width: 60px;
+    max-width: 44px;
+  }
+
+  /* Phones: the header is tight, so Menu shows as its icon (it keeps its aria-label). */
+  .menu-trigger__label {
+    display: none;
+  }
+
+  .view-toggle {
+    min-width: 34px;
+    padding: 0 8px;
   }
 
   .btn-pill,
@@ -2563,4 +2593,11 @@ body,
 .faq-item,
 .pipeline-card {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Narrow phones (360px and similar): the player name moves into the HUD dropdown only. */
+@media (max-width: 400px) {
+  .hud-trigger-handle {
+    display: none;
+  }
 }

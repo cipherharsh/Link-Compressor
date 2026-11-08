@@ -1,7 +1,7 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { useSceneStore } from './state/sceneStore';
 import { useThemeStore } from './state/themeStore';
-import { useShow3D } from './state/viewStore';
+import { useShow3D, useViewStore } from './state/viewStore';
 import { localDecompress } from './engine/localCompress';
 import Loader from './ui/Loader';
 import Fallback2D from './ui/Fallback2D';
@@ -58,6 +58,8 @@ export const App: React.FC = () => {
   const currentChapter = useSceneStore((s) => s.currentChapter);
   const scrollProgress = useSceneStore((s) => s.scrollProgress);
   const show3D = useShow3D();
+  const webglSupported = useSceneStore((s) => s.webglSupported);
+  const setView = useViewStore((s) => s.setView);
   const loaderFinished = useSceneStore((s) => s.loaderFinished);
   const setCapability = useSceneStore((s) => s.setCapability);
   const flattenQR = useSceneStore((s) => s.flattenQR);
@@ -150,12 +152,23 @@ export const App: React.FC = () => {
           >
             {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
           </button>
+          {/* Without WebGL the page can only be 2D, so there is nothing to switch. */}
+          {webglSupported && (
+            <button
+              className="view-toggle"
+              onClick={() => setView(show3D ? '2d' : '3d')}
+              aria-label={show3D ? 'Switch to the minimal 2D view' : 'Switch to the 3D view'}
+              title={show3D ? 'Minimal 2D view' : '3D view'}
+            >
+              {show3D ? '2D' : '3D'}
+            </button>
+          )}
           <button
             className="btn-pill menu-trigger"
             onClick={() => setIsMenuOpen(true)}
             aria-label="Open navigation menu"
           >
-            Menu ☰
+            <span className="menu-trigger__label">Menu </span>☰
           </button>
         </div>
       </header>

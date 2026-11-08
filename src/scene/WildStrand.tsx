@@ -11,7 +11,8 @@ import fragShader from './shaders/strand.frag.glsl?raw';
 export const WildStrand: React.FC = () => {
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
-  const collapseProgress = useSceneStore((s) => s.collapseProgress);
+  // How far the ribbon is drawn into the QR (see uGather in the shader).
+  const gather = useRef(0);
   const qualityTier = useSceneStore((s) => s.qualityTier);
   const colors = useSceneTheme();
 
@@ -51,7 +52,7 @@ export const WildStrand: React.FC = () => {
 
     const u = {
       uTime: { value: 0 },
-      uCollapse: { value: 0 },
+      uGather: { value: 0 },
       uPixelRatio: { value: gl.getPixelRatio() },
       uSpanScale: { value: 1 },
       uColorA: { value: new THREE.Color() },
@@ -70,11 +71,17 @@ export const WildStrand: React.FC = () => {
     };
   }, [geometry]);
 
-  useFrame(({ clock, camera, size }) => {
+  useFrame(({ clock, camera, size }, delta) => {
     if (!materialRef.current) return;
     const u = materialRef.current.uniforms;
     u.uTime.value = clock.getElapsedTime();
-    u.uCollapse.value = collapseProgress;
+
+    // Follow the collapse animation in; once the code has formed, ease back out.
+    const { isCollapsing, collapseProgress } = useSceneStore.getState();
+    gather.current = isCollapsing
+      ? collapseProgress
+      : gather.current * Math.exp(-delta * 2.2);
+    u.uGather.value = gather.current;
 
     // Fit the wave to the visible width at the camera's distance, a bit wider than
     // the screen so both ends sit just past the edges on phones and laptops alike.

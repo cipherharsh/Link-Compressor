@@ -33,10 +33,10 @@ export const VoxelQR: React.FC = () => {
   const [pulseTime, setPulseTime] = useState<number>(0);
   const [matrixData, setMatrixData] = useState<boolean[][] | null>(null);
 
-  // Compute QR matrix asynchronously using qrMatrix.worker (only once there's a real link).
+  // Compute QR matrix asynchronously using qrMatrix.worker. Until a link is
+  // compressed, the code points at this site so the 3D QR always has something to show.
   useEffect(() => {
-    if (!activeQrPayload) return;
-    const textToEncode = activeQrPayload;
+    const textToEncode = activeQrPayload || window.location.href.split(/[?#]/)[0];
     const worker = new Worker(new URL('../engine/qrMatrix.worker.ts', import.meta.url), {
       type: 'module'
     });
@@ -83,11 +83,10 @@ export const VoxelQR: React.FC = () => {
 
     const time = clock.getElapsedTime();
 
-    // Shown only after a compression: it reveals with the collapse animation, then
-    // fades out as the visitor scrolls past the compressor, so it never sits behind
-    // the text further down the page. Flatten mode always shows it.
-    const nearTop = 1 - THREE.MathUtils.smoothstep(scrollProgress, 0.1, 0.25);
-    const effectiveVisibility = flattenQR ? 1 : activeQrPayload ? collapseProgress * nearTop : 0;
+    // Rises into view in the Pipeline and Join chapters, and grows in again with each
+    // new compression (the collapse animation). Flatten mode always shows it.
+    const chapterVisible = THREE.MathUtils.smoothstep(scrollProgress, 0.45, 0.65);
+    const effectiveVisibility = flattenQR ? 1 : Math.max(chapterVisible, collapseProgress);
     groupRef.current.visible = effectiveVisibility > 0.01;
     // The backing plane fades with the code; otherwise it hides the wave behind it.
     planeRef.current?.scale.setScalar(Math.max(0.001, effectiveVisibility));
