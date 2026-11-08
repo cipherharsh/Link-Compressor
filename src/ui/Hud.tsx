@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useGameStore, calculateLevel } from '../state/gameStore';
 import { useSceneStore } from '../state/sceneStore';
+import { useShow3D } from '../state/viewStore';
 import Achievements from './Achievements';
 import ClaimHandleModal from './ClaimHandleModal';
 
@@ -15,7 +16,7 @@ const Hud: React.FC = () => {
 
   const flattenQR = useSceneStore((s) => s.flattenQR);
   const toggleFlattenQR = useSceneStore((s) => s.toggleFlattenQR);
-  const webglSupported = useSceneStore((s) => s.webglSupported);
+  const show3D = useShow3D();
 
   const [isOpen, setIsOpen] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -117,7 +118,7 @@ const Hud: React.FC = () => {
                   </button>
 
                   <div className="hud-controls">
-                    {webglSupported && (
+                    {show3D && (
                       <button
                         className={`hud-flatten-btn${flattenQR ? ' is-active' : ''}`}
                         onClick={toggleFlattenQR}

@@ -1746,6 +1746,8 @@
   border-radius: var(--radius-pill);
   width: 100%;
   justify-content: center;
+  flex-wrap: wrap;
+  text-align: center;
 }
 
 .fallback__wave-wrap {
@@ -2040,7 +2042,6 @@
 }
 
 .menu-settings {
-  align-self: flex-start;
   background: none;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-pill);
@@ -2054,6 +2055,76 @@
 .menu-settings:hover {
   border-color: var(--color-accent-line);
   color: var(--color-text);
+}
+
+/* Page style switch and domain settings, above the menu links. */
+.menu-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.menu-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.view-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+}
+
+.view-switch__label {
+  padding: 0 6px 0 10px;
+  color: var(--color-muted);
+  font-weight: 500;
+}
+
+.view-switch__opt {
+  padding: 6px 14px;
+  background: none;
+  border: none;
+  border-radius: var(--radius-pill);
+  color: var(--color-muted);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.view-switch__opt:hover:not(:disabled):not(.is-active) {
+  color: var(--color-text);
+}
+
+.view-switch__opt.is-active {
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.view-switch__opt:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* "Switch to 3D" inside the 2D notice. */
+.fallback__switch {
+  margin-left: var(--space-2);
+  padding: 0;
+  background: none;
+  border: none;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
 }
 
 /* ───────────────────────── Show QR popup ───────────────────────── */

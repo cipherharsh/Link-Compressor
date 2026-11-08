@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useSceneStore } from '../state/sceneStore';
 import { useThemeStore } from '../state/themeStore';
+import { useViewStore } from '../state/viewStore';
 import { generateQR, renderToCanvas } from '../qrcode.js';
 import { QR_INK } from './QrModal';
 
@@ -13,6 +14,8 @@ const PLACEHOLDER_STAGES = [
 
 const Fallback2D: React.FC = () => {
   const unsupportedReason = useSceneStore((s) => s.unsupportedReason);
+  const webglSupported = useSceneStore((s) => s.webglSupported);
+  const setView = useViewStore((s) => s.setView);
   const activeStages = useSceneStore((s) => s.activeStages);
   const activeQrPayload = useSceneStore((s) => s.activeQrPayload);
   const isCollapsing = useSceneStore((s) => s.isCollapsing);
@@ -43,7 +46,16 @@ const Fallback2D: React.FC = () => {
     <div className="fallback">
       <div className="fallback__notice">
         <span aria-hidden="true">⚡</span>
-        <span>2D Mode: {unsupportedReason || 'Standard visualizer active'}</span>
+        {webglSupported ? (
+          <>
+            <span>2D Mode: Minimal view</span>
+            <button type="button" className="fallback__switch" onClick={() => setView('3d')}>
+              Switch to 3D
+            </button>
+          </>
+        ) : (
+          <span>2D Mode: {unsupportedReason || 'Standard visualizer active'}</span>
+        )}
       </div>
 
       <div className="fallback__wave-wrap">

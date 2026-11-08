@@ -1,4 +1,6 @@
 import React, { useEffect, useRef } from 'react';
+import { useSceneStore } from '../state/sceneStore';
+import { useViewStore, type ViewMode } from '../state/viewStore';
 
 interface MenuOverlayProps {
   isOpen: boolean;
@@ -19,6 +21,11 @@ const MENU_LINKS = [
 export const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, triggerRef, onNavigate, onOpenSettings }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const firstLinkRef = useRef<HTMLButtonElement>(null);
+  const view = useViewStore((s) => s.view);
+  const setView = useViewStore((s) => s.setView);
+  const webglSupported = useSceneStore((s) => s.webglSupported);
+  // Without WebGL the page is 2D regardless of the saved choice.
+  const activeView: ViewMode = webglSupported ? view : '2d';
 
   useEffect(() => {
     if (!isOpen) return;
@@ -67,6 +74,12 @@ export const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, trigg
     onNavigate?.(target);
   };
 
+  // Close straight away so the visitor sees the page change.
+  const chooseView = (next: ViewMode) => {
+    setView(next);
+    onClose();
+  };
+
   return (
     <div
       ref={containerRef}
@@ -85,29 +98,55 @@ export const MenuOverlay: React.FC<MenuOverlayProps> = ({ isOpen, onClose, trigg
         </button>
       </div>
 
-      <nav className="menu-nav">
-        {MENU_LINKS.map((link, idx) => (
-          <button
-            key={link.target}
-            ref={idx === 0 ? firstLinkRef : undefined}
-            className="menu-link"
-            onClick={() => handleLinkClick(link.target)}
-          >
-            {link.label}
-          </button>
-        ))}
-        {onOpenSettings && (
-          <button
-            className="menu-settings"
-            onClick={() => {
-              onClose();
-              onOpenSettings();
-            }}
-          >
-            ⚙ Short-link domain settings
-          </button>
-        )}
-      </nav>
+      <div className="menu-body">
+        <div className="menu-options">
+          <div className="view-switch" role="group" aria-label="Page style">
+            <span className="view-switch__label">View</span>
+            <button
+              className={`view-switch__opt${activeView === '3d' ? ' is-active' : ''}`}
+              aria-pressed={activeView === '3d'}
+              disabled={!webglSupported}
+              title={webglSupported ? 'Full 3D scene' : "3D isn't supported on this device"}
+              onClick={() => chooseView('3d')}
+            >
+              3D
+            </button>
+            <button
+              className={`view-switch__opt${activeView === '2d' ? ' is-active' : ''}`}
+              aria-pressed={activeView === '2d'}
+              title="Minimal page without the 3D scene"
+              onClick={() => chooseView('2d')}
+            >
+              2D minimal
+            </button>
+          </div>
+
+          {onOpenSettings && (
+            <button
+              className="menu-settings"
+              onClick={() => {
+                onClose();
+                onOpenSettings();
+              }}
+            >
+              ⚙ Short-link domain settings
+            </button>
+          )}
+        </div>
+
+        <nav className="menu-nav">
+          {MENU_LINKS.map((link, idx) => (
+            <button
+              key={link.target}
+              ref={idx === 0 ? firstLinkRef : undefined}
+              className="menu-link"
+              onClick={() => handleLinkClick(link.target)}
+            >
+              {link.label}
+            </button>
+          ))}
+        </nav>
+      </div>
 
       <div className="menu-overlay__foot">
         <div>Client-Side • Zero-Server • Open Source</div>

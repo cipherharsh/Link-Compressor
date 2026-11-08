@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api, type CompressResponse } from '../api/adapter';
 import { useGameStore } from '../state/gameStore';
 import { useSceneStore } from '../state/sceneStore';
+import { useShow3D } from '../state/viewStore';
 import { useThemeStore } from '../state/themeStore';
 import { playCollapseAnimation } from '../scene/timeline';
 import QrModal, { downloadQr, QR_INK } from './QrModal';
@@ -116,7 +117,7 @@ const Playground: React.FC<PlaygroundProps> = ({ linkDomain, onOpenSettings }) =
   const recordScanReady = useGameStore((s) => s.recordScanReady);
   const flattenQR = useSceneStore((s) => s.flattenQR);
   const toggleFlattenQR = useSceneStore((s) => s.toggleFlattenQR);
-  const webglSupported = useSceneStore((s) => s.webglSupported);
+  const show3D = useShow3D();
   const theme = useThemeStore((s) => s.theme);
 
   const displayUrl = compressResult
@@ -364,7 +365,7 @@ const Playground: React.FC<PlaygroundProps> = ({ linkDomain, onOpenSettings }) =
                 {canShare() && (
                   <button className="toolbar-btn" onClick={() => shareLink(displayUrl)}>Share</button>
                 )}
-                {webglSupported && (
+                {show3D && (
                   <button className={`toolbar-btn${flattenQR ? ' is-active' : ''}`} onClick={toggleFlattenQR}>
                     {flattenQR ? 'Restore 3D view' : 'Flatten 3D QR'}
                   </button>

@@ -1,6 +1,7 @@
 import React, { Suspense, lazy, useEffect, useState } from 'react';
 import { useSceneStore } from './state/sceneStore';
 import { useThemeStore } from './state/themeStore';
+import { useShow3D } from './state/viewStore';
 import { localDecompress } from './engine/localCompress';
 import Loader from './ui/Loader';
 import Fallback2D from './ui/Fallback2D';
@@ -56,7 +57,7 @@ function readCompressedCandidate(): string {
 export const App: React.FC = () => {
   const currentChapter = useSceneStore((s) => s.currentChapter);
   const scrollProgress = useSceneStore((s) => s.scrollProgress);
-  const webglSupported = useSceneStore((s) => s.webglSupported);
+  const show3D = useShow3D();
   const loaderFinished = useSceneStore((s) => s.loaderFinished);
   const setCapability = useSceneStore((s) => s.setCapability);
   const flattenQR = useSceneStore((s) => s.flattenQR);
@@ -120,7 +121,7 @@ export const App: React.FC = () => {
       {!loaderFinished && <Loader />}
 
       <div id="webgl-container" aria-hidden="true">
-        {webglSupported && load3D && (
+        {show3D && load3D && (
           <SceneBoundary onError={() => setCapability(false, 'Not supported WebGL')}>
             <Suspense fallback={null}>
               <Scene />
@@ -194,7 +195,7 @@ export const App: React.FC = () => {
                 <h1 className="compressor-title">Shrink any link into a tiny, scannable code.</h1>
               </div>
               <Playground linkDomain={linkDomain} onOpenSettings={() => setIsSettingsOpen(true)} />
-              {!webglSupported && <Fallback2D />}
+              {!show3D && <Fallback2D />}
             </div>
           }
           join={
