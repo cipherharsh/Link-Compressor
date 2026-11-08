@@ -6,10 +6,12 @@ import { useDialogFocus } from './useDialogFocus';
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Called after the domain is saved or reset, so the page can show the new value. */
+  onSaved?: () => void;
 }
 
 /** Lets the visitor choose which domain new short links (and QR codes) point at. */
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, onSaved }) => {
   const dialogRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [value, setValue] = useState('');
@@ -44,6 +46,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     else setDomain(domain);
     setValue(domain);
     setSaved(true);
+    onSaved?.();
   };
 
   const handleUseThisSite = () => {
@@ -51,6 +54,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose }) => {
     setValue(currentSite);
     setError(null);
     setSaved(true);
+    onSaved?.();
   };
 
   return (

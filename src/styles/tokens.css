@@ -15,7 +15,10 @@
   --color-bg: #06110C;
   --color-surface: #171717;
   --color-surface-hover: #202020;
-  --color-surface-glass: rgba(23, 23, 23, 0.8);
+  --color-surface-glass: rgba(23, 23, 23, 0.92);
+  /* Veil between the 3D scene and the page text: strongest where the text column is. */
+  --color-scene-scrim: rgba(6, 17, 12, 0.5);
+  --color-scene-scrim-edge: rgba(6, 17, 12, 0.18);
   --color-panel: rgba(23, 23, 23, 0.98);
   --color-input: #0C1D14;
   --color-border: rgba(205, 242, 43, 0.12);
@@ -109,7 +112,9 @@
   --color-bg: #FAF8F3;
   --color-surface: #FFFFFF;
   --color-surface-hover: #F3F0E7;
-  --color-surface-glass: rgba(255, 255, 255, 0.82);
+  --color-surface-glass: rgba(255, 255, 255, 0.93);
+  --color-scene-scrim: rgba(250, 248, 243, 0.58);
+  --color-scene-scrim-edge: rgba(250, 248, 243, 0.22);
   --color-panel: rgba(255, 255, 255, 0.98);
   --color-input: #F3F0E7;
   --color-border: rgba(8, 9, 139, 0.14);
@@ -186,6 +191,21 @@ body {
 
 #webgl-container canvas {
   pointer-events: auto;
+}
+
+/* Keeps particles and voxels from fighting the text drawn over them. */
+#webgl-container::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse 75% 85% at 50% 50%,
+    var(--color-scene-scrim) 0%,
+    var(--color-scene-scrim) 45%,
+    var(--color-scene-scrim-edge) 100%
+  );
+  transition: opacity var(--duration-ui, 0.25s) ease;
 }
 
 /* Firefox fades placeholders to ~54% opacity by default; keep them readable. */

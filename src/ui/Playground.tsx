@@ -73,7 +73,13 @@ const SAMPLE_URLS = [
   { label: 'Wikipedia Deep Link', url: 'https://en.wikipedia.org/wiki/Huffman_coding#History' },
 ];
 
-const Playground: React.FC = () => {
+interface PlaygroundProps {
+  /** Domain new short links use (from the short-link domain setting). */
+  linkDomain: string;
+  onOpenSettings: () => void;
+}
+
+const Playground: React.FC<PlaygroundProps> = ({ linkDomain, onOpenSettings }) => {
   const [activeTab, setActiveTab] = useState<PlaygroundTab>('compress');
 
   // Compress
@@ -293,7 +299,15 @@ const Playground: React.FC = () => {
             ))}
           </div>
 
-          {compressError && <div className="alert-error">⚠️ {compressError}</div>}
+          <p className="domain-line">
+            Short links use <code>{linkDomain}</code>
+            <span aria-hidden="true"> · </span>
+            <button type="button" className="domain-line__change" onClick={onOpenSettings}>
+              Change domain
+            </button>
+          </p>
+
+          {compressError &&<div className="alert-error">⚠️ {compressError}</div>}
 
           {compressResult && (
             <div className="result-card">

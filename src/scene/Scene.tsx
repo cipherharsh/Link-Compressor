@@ -1,6 +1,6 @@
 /** Root R3F canvas: camera rig, postprocessing, and the 3D scene objects. */
 
-import React, { useMemo, Suspense } from 'react';
+import React, { useMemo, useRef, Suspense } from 'react';
 import * as THREE from 'three';
 import { Canvas, useFrame, useThree } from '@react-three/fiber';
 import { PerformanceMonitor, OrbitControls } from '@react-three/drei';
@@ -14,8 +14,11 @@ import VoxelQR from './VoxelQR';
 import Ambient from './Ambient';
 
 // Camera controller with CatmullRom spline path, drift, and parallax
+/** Largest flattened card (QR + 4-module quiet zone) across all QR sizes, in world units. */
+const FLAT_CARD = 4.45;
+
 const CameraRig: React.FC = () => {
-  const { camera, pointer } = useThree();
+  const { camera, pointer, size } = useThree();
   const scrollProgress = useSceneStore((s) => s.scrollProgress);
   const flattenQR = useSceneStore((s) => s.flattenQR);
 
@@ -34,7 +37,13 @@ const CameraRig: React.FC = () => {
 
     if (flattenQR) {
       // Top-down scan mode view
-      camera.position.lerp(new THREE.Vector3(0, -0.2, 5.0), 0.1);
+      // Back off just enough that the white code card (QR + quiet zone, about
+      // FLAT_CARD world units wide) fills ~70% of the screen's shorter side.
+      const fov = THREE.MathUtils.degToRad((camera as THREE.PerspectiveCamera).fov);
+      const aspect = size.width / Math.max(1, size.height);
+      const heightNeeded = FLAT_CARD / 0.7 / Math.min(1, aspect);
+      const distance = heightNeeded / (2 * Math.tan(fov / 2));
+      camera.position.lerp(new THREE.Vector3(0, -0.2, distance), 0.1);
       camera.lookAt(0, -0.2, 0);
       return;
     }
@@ -67,7 +76,6 @@ export const Scene: React.FC = () => {
   const isCollapsing = useSceneStore((s) => s.isCollapsing);
   const qualityTier = useSceneStore((s) => s.qualityTier);
   const setFpsAndTier = useSceneStore((s) => s.setFpsAndTier);
-  const setCapability = useSceneStore((s) => s.setCapability);
   const flattenQR = useSceneStore((s) => s.flattenQR);
   const colors = useSceneTheme();
 
@@ -76,16 +84,21 @@ export const Scene: React.FC = () => {
   const usePostFx = qualityTier !== 'low' && !isMobile && colors.postFx && !flattenQR;
   const dprCap = isMobile ? 1.5 : 2.0;
 
-  // Adaptive performance thresholds
-  const handlePerformanceChange = ({ fps }: { fps: number }) => {
-    if (fps < 30) {
-      // Degrade to 2D fallback shell if FPS drops critically
-      setCapability(false, 'Not supported WebGL');
-    } else if (fps < 45) {
-      setFpsAndTier(fps, 'low');
-    } else {
-      setFpsAndTier(fps, 'high');
-    }
+  // Adaptive quality: a slow patch drops to the lighter 'low' tier (fewer particles,
+  // no post effects) and a fast one restores 'high'. If the frame rate keeps swinging
+  // between the two, stay on 'low' for the rest of the visit. Frame rate never
+  // switches the page to 2D: that is only for devices where WebGL fails outright.
+  const tierLocked = useRef(false);
+  const handleDecline = ({ fps }: { fps: number }) => {
+    // Browsers throttle hidden tabs, so those readings say nothing about the device.
+    if (!document.hidden) setFpsAndTier(fps, 'low');
+  };
+  const handleIncline = ({ fps }: { fps: number }) => {
+    if (!tierLocked.current) setFpsAndTier(fps, 'high');
+  };
+  const handleFallback = ({ fps }: { fps: number }) => {
+    tierLocked.current = true;
+    setFpsAndTier(fps, 'low');
   };
 
   return (
@@ -99,7 +112,12 @@ export const Scene: React.FC = () => {
       }}
       style={{ width: '100%', height: '100%' }}
     >
-      <PerformanceMonitor onChange={handlePerformanceChange} />
+      <PerformanceMonitor
+        flipflops={4}
+        onDecline={handleDecline}
+        onIncline={handleIncline}
+        onFallback={handleFallback}
+      />
       <CameraRig />
 
       {/* Orbit controls with bounded rotation in 3D play chapter */}
@@ -121,9 +139,12 @@ export const Scene: React.FC = () => {
 
       {/* 3D Scene Components */}
       <Suspense fallback={null}>
-        <Ambient />
-        <WildStrand />
-        <HuffmanTree />
+        {/* While the QR is flattened for scanning, nothing may sit in front of it. */}
+        <group visible={!flattenQR}>
+          <Ambient />
+          <WildStrand />
+          <HuffmanTree />
+        </group>
         <VoxelQR />
       </Suspense>
 

@@ -9,12 +9,9 @@ import vertShader from './shaders/strand.vert.glsl?raw';
 import fragShader from './shaders/strand.frag.glsl?raw';
 
 export const WildStrand: React.FC = () => {
-  const pointsRef = useRef<THREE.Points>(null);
   const materialRef = useRef<THREE.ShaderMaterial>(null);
 
-  const scrollProgress = useSceneStore((s) => s.scrollProgress);
   const collapseProgress = useSceneStore((s) => s.collapseProgress);
-  const activeUrl = useSceneStore((s) => s.activeUrl);
   const qualityTier = useSceneStore((s) => s.qualityTier);
   const colors = useSceneTheme();
 
@@ -24,51 +21,39 @@ export const WildStrand: React.FC = () => {
   // Particle count budget based on device and performance tier
   const particleCount = useMemo(() => {
     if (qualityTier === 'low') return 4000;
-    if (isMobile || qualityTier === 'medium') return 6000;
-    return 20000;
+    if (isMobile || qualityTier === 'medium') return 7000;
+    return 16000;
   }, [isMobile, qualityTier]);
 
-  // Construct ribbon geometry along a 3D CatmullRom spline
+  // Each particle has a fixed place along the wave (aProgress) plus a small
+  // thickness offset; the shader computes the actual wave shape every frame.
   const { geometry, uniforms } = useMemo(() => {
-    // Generate spline control points
-    const points: THREE.Vector3[] = [
-      new THREE.Vector3(-4.5, 2.0, -2.0),
-      new THREE.Vector3(-2.0, -1.2, 0.5),
-      new THREE.Vector3(0.0, 1.5, 1.0),
-      new THREE.Vector3(2.5, -0.8, -0.5),
-      new THREE.Vector3(4.5, 1.2, -2.5)
-    ];
-    const curve = new THREE.CatmullRomCurve3(points);
-
-    const positions = new Float32Array(particleCount * 3);
+    const positions = new Float32Array(particleCount * 3); // placed by the shader
     const aRandom = new Float32Array(particleCount);
     const aProgress = new Float32Array(particleCount);
+    const aOffset = new Float32Array(particleCount * 2);
+
+    // Roughly Gaussian spread, so the ribbon is dense in the middle and soft at its edges.
+    const bell = () => Math.random() + Math.random() + Math.random() - 1.5;
 
     for (let i = 0; i < particleCount; i++) {
-      const t = i / particleCount;
-      const point = curve.getPoint(t);
-
-      // Offset perpendicularly to give strand thickness
-      const spread = 0.35;
-      positions[i * 3 + 0] = point.x + (Math.random() - 0.5) * spread;
-      positions[i * 3 + 1] = point.y + (Math.random() - 0.5) * spread;
-      positions[i * 3 + 2] = point.z + (Math.random() - 0.5) * spread;
-
+      aProgress[i] = i / (particleCount - 1);
       aRandom[i] = Math.random();
-      aProgress[i] = t;
+      aOffset[i * 2] = bell() * 0.12;
+      aOffset[i * 2 + 1] = bell() * 0.2;
     }
 
     const geo = new THREE.BufferGeometry();
     geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
     geo.setAttribute('aRandom', new THREE.BufferAttribute(aRandom, 1));
     geo.setAttribute('aProgress', new THREE.BufferAttribute(aProgress, 1));
+    geo.setAttribute('aOffset', new THREE.BufferAttribute(aOffset, 2));
 
     const u = {
       uTime: { value: 0 },
-      uProgress: { value: 0 },
       uCollapse: { value: 0 },
-      uLength: { value: 0.8 },
       uPixelRatio: { value: gl.getPixelRatio() },
+      uSpanScale: { value: 1 },
       uColorA: { value: new THREE.Color() },
       uColorB: { value: new THREE.Color() }
     };
@@ -78,21 +63,26 @@ export const WildStrand: React.FC = () => {
 
   // Clean up GPU allocations on unmount
   useEffect(() => {
+    const material = materialRef.current;
     return () => {
       geometry.dispose();
-      materialRef.current?.dispose();
+      material?.dispose();
     };
   }, [geometry]);
 
-  // Dynamic animation updates on every frame
-  useFrame(({ clock }) => {
+  useFrame(({ clock, camera, size }) => {
     if (!materialRef.current) return;
-    materialRef.current.uniforms.uTime.value = clock.getElapsedTime();
-    materialRef.current.uniforms.uProgress.value = scrollProgress;
-    materialRef.current.uniforms.uCollapse.value = collapseProgress;
-    // Map URL length to [0.2, 1.0]
-    const lenNorm = activeUrl ? Math.min(1.0, Math.max(0.2, activeUrl.length / 80)) : 0.8;
-    materialRef.current.uniforms.uLength.value = lenNorm;
+    const u = materialRef.current.uniforms;
+    u.uTime.value = clock.getElapsedTime();
+    u.uCollapse.value = collapseProgress;
+
+    // Fit the wave to the visible width at the camera's distance, a bit wider than
+    // the screen so both ends sit just past the edges on phones and laptops alike.
+    const cam = camera as THREE.PerspectiveCamera;
+    const distance = Math.abs(cam.position.z);
+    const visibleHeight = 2 * distance * Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
+    const visibleWidth = visibleHeight * (size.width / Math.max(1, size.height));
+    u.uSpanScale.value = (visibleWidth * 1.08) / 14;
   });
 
   // Theme colours feed the shader; additive glow only suits the dark theme.
@@ -102,7 +92,8 @@ export const WildStrand: React.FC = () => {
   }, [uniforms, colors.strandA, colors.strandB]);
 
   return (
-    <points ref={pointsRef} geometry={geometry}>
+    // Positions come from the shader, so the geometry's bounds can't be used for culling.
+    <points geometry={geometry} frustumCulled={false}>
       <shaderMaterial
         // Blending is baked into the compiled program, so remount when it changes.
         key={colors.additive ? 'additive' : 'normal'}

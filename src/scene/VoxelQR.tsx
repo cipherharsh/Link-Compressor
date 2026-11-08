@@ -20,6 +20,7 @@ interface VoxelData {
 export const VoxelQR: React.FC = () => {
   const meshRef = useRef<THREE.InstancedMesh>(null);
   const groupRef = useRef<THREE.Group>(null);
+  const planeRef = useRef<THREE.Mesh>(null);
 
   const activeQrPayload = useSceneStore((s) => s.activeQrPayload);
   const scrollProgress = useSceneStore((s) => s.scrollProgress);
@@ -32,9 +33,10 @@ export const VoxelQR: React.FC = () => {
   const [pulseTime, setPulseTime] = useState<number>(0);
   const [matrixData, setMatrixData] = useState<boolean[][] | null>(null);
 
-  // Compute QR matrix asynchronously using qrMatrix.worker
+  // Compute QR matrix asynchronously using qrMatrix.worker (only once there's a real link).
   useEffect(() => {
-    const textToEncode = activeQrPayload || 'https://lz.io';
+    if (!activeQrPayload) return;
+    const textToEncode = activeQrPayload;
     const worker = new Worker(new URL('../engine/qrMatrix.worker.ts', import.meta.url), {
       type: 'module'
     });
@@ -81,9 +83,14 @@ export const VoxelQR: React.FC = () => {
 
     const time = clock.getElapsedTime();
 
-    // Visibility in Chapter 3 & 4 (0.55 to 1.0) or during collapse animation
-    const chapterVisible = THREE.MathUtils.smoothstep(scrollProgress, 0.45, 0.65);
-    const effectiveVisibility = Math.max(chapterVisible, collapseProgress);
+    // Shown only after a compression: it reveals with the collapse animation, then
+    // fades out as the visitor scrolls past the compressor, so it never sits behind
+    // the text further down the page. Flatten mode always shows it.
+    const nearTop = 1 - THREE.MathUtils.smoothstep(scrollProgress, 0.1, 0.25);
+    const effectiveVisibility = flattenQR ? 1 : activeQrPayload ? collapseProgress * nearTop : 0;
+    groupRef.current.visible = effectiveVisibility > 0.01;
+    // The backing plane fades with the code; otherwise it hides the wave behind it.
+    planeRef.current?.scale.setScalar(Math.max(0.001, effectiveVisibility));
 
     // Flatten mode interpolation (smoothly rotate to top-down flat view)
     const targetRotX = flattenQR ? 0 : 0.35;
@@ -149,7 +156,7 @@ export const VoxelQR: React.FC = () => {
       </instancedMesh>
 
       {/* Backing plane: theme background normally, white paper when flattened for scanning */}
-      <mesh position={[0, 0, -0.02]}>
+      <mesh ref={planeRef} position={[0, 0, -0.02]}>
         <planeGeometry args={[planeSize, planeSize]} />
         {/* No tone mapping: the plane must match the page/paper colour exactly. */}
         <meshBasicMaterial color={flattenQR ? FLAT_QR.paper : colors.fog} toneMapped={false} />

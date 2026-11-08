@@ -14,6 +14,7 @@ import { MenuOverlay } from './ui/MenuOverlay';
 import Footer from './ui/Footer';
 import LiveCounterStrip from './ui/LiveCounterStrip';
 import SettingsModal from './ui/SettingsModal';
+import { getDomain } from './config.js';
 
 // three.js, R3F, drei, and postprocessing are most of the bundle; load them separately.
 const Scene = lazy(() => import('./scene/Scene'));
@@ -58,6 +59,8 @@ export const App: React.FC = () => {
   const webglSupported = useSceneStore((s) => s.webglSupported);
   const loaderFinished = useSceneStore((s) => s.loaderFinished);
   const setCapability = useSceneStore((s) => s.setCapability);
+  const flattenQR = useSceneStore((s) => s.flattenQR);
+  const setFlattenQR = useSceneStore((s) => s.setFlattenQR);
 
   // Start downloading the 3D scene only once the browser is idle, so the
   // compressor is interactive first on slow connections and phones.
@@ -78,6 +81,7 @@ export const App: React.FC = () => {
 
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [linkDomain, setLinkDomain] = useState(() => getDomain());
   const isHeaderSolid = scrollProgress > 0.02;
 
   // If the app was loaded via a compressed short link, decode it and redirect.
@@ -97,12 +101,22 @@ export const App: React.FC = () => {
     }
   }, []);
 
+  // Esc leaves the flat (scan) view.
+  useEffect(() => {
+    if (!flattenQR) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFlattenQR(false);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [flattenQR, setFlattenQR]);
+
   const scrollToSection = (sectionId: string) => {
     document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
   return (
-    <div className="lz-app">
+    <div className={`lz-app${flattenQR ? ' is-flat-view' : ''}`}>
       {!loaderFinished && <Loader />}
 
       <div id="webgl-container" aria-hidden="true">
@@ -152,7 +166,20 @@ export const App: React.FC = () => {
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
 
-      <SettingsModal isOpen={isSettingsOpen} onClose={() => setIsSettingsOpen(false)} />
+      <SettingsModal
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSaved={() => setLinkDomain(getDomain())}
+      />
+
+      {flattenQR && (
+        <div className="flat-view-bar" role="status">
+          <span>Point your phone camera at the code</span>
+          <button className="btn-accent flat-view-bar__exit" onClick={() => setFlattenQR(false)}>
+            Exit flat view
+          </button>
+        </div>
+      )}
 
       <div className="chapter-progress">
         Chapter {currentChapter} / 4 — <strong>{CHAPTER_LABELS[currentChapter]}</strong>
@@ -166,7 +193,7 @@ export const App: React.FC = () => {
                 <div className="eyebrow">Client-side URL compressor</div>
                 <h1 className="compressor-title">Shrink any link into a tiny, scannable code.</h1>
               </div>
-              <Playground />
+              <Playground linkDomain={linkDomain} onOpenSettings={() => setIsSettingsOpen(true)} />
               {!webglSupported && <Fallback2D />}
             </div>
           }
