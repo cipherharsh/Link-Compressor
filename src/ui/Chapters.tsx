@@ -93,7 +93,7 @@ const Chapters: React.FC<ChaptersProps> = ({ compressor, join }) => {
       <section id="pipeline" className="chapter">
         <div className="chapter-inner chapter-inner--pipeline">
           <div className="eyebrow">The Four-Stage Compression Engine</div>
-          <h2 className="section-title">Watch URLs dissolve into tree leaves.</h2>
+          <h2 className="section-title">From long URL to tiny code in four steps.</h2>
           <p className="section-lead">
             Unlike traditional link shorteners that depend on centralized SQL tables, LinkZip relies
             purely on mathematics and reversible bitstream serialization.
