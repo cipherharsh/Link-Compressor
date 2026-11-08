@@ -79,10 +79,6 @@ const Chapters: React.FC<ChaptersProps> = ({ compressor, join }) => {
   const isPipelineActive = currentChapter === 3;
   const stageIndex = Math.min(3, Math.max(0, Math.floor(((scrollProgress - 0.55) / 0.3) * 4)));
 
-  const scrollToPipeline = () => {
-    document.getElementById('pipeline')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
   return (
     <div ref={containerRef} className="chapters">
       {/* 1. Compressor — the dedicated opening section */}
@@ -90,7 +86,7 @@ const Chapters: React.FC<ChaptersProps> = ({ compressor, join }) => {
 
       {/* 2. Hero narrative */}
       <div className="chapter-hero-wrap">
-        <Hero onScrollExplore={scrollToPipeline} />
+        <Hero />
       </div>
 
       {/* 3. The compression pipeline */}

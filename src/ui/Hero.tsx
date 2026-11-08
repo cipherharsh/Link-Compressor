@@ -36,7 +36,7 @@ const HERO_CARDS: HeroCard[] = [
   },
 ];
 
-const Hero: React.FC<{ onScrollExplore?: () => void }> = ({ onScrollExplore }) => {
+const Hero: React.FC = () => {
   const [activeCardIndex, setActiveCardIndex] = useState(0);
   const [isHovered, setIsHovered] = useState(false);
 
@@ -92,11 +92,6 @@ const Hero: React.FC<{ onScrollExplore?: () => void }> = ({ onScrollExplore }) =
           <span className="hero-card__state">{isHovered ? 'Paused' : 'Auto-rotating'}</span>
         </div>
       </div>
-
-      <button className="scroll-cue" onClick={onScrollExplore}>
-        <span>Scroll to Explore</span>
-        <span className="scroll-cue__arrow">↓</span>
-      </button>
     </section>
   );
 };

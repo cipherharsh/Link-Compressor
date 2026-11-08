@@ -11,9 +11,18 @@ import { SCENE_THEMES, FLAT_QR } from './sceneTheme';
 const QR_WIDTH = 3.2; // world units across the module grid
 const QUIET_ZONE = 4; // modules of empty border required for scanning
 
+// Extrusion is measured in modules, not world units: a dense code (a long link) has
+// smaller modules, and fixed heights would turn them into tall pillars that pile up.
+const MIN_HEIGHT = 1.0; // modules
+const MAX_HEIGHT = 2.8; // modules
+const RIPPLE = 0.45; // modules
+const TILT_X = 0.28; // radians
+const TILT_Y = 0.32; // radians
+
 interface VoxelData {
   r: number;
   c: number;
+  /** Resting height, in modules. */
   baseHeight: number;
 }
 
@@ -65,9 +74,9 @@ export const VoxelQR: React.FC = () => {
     for (let r = 0; r < s; r++) {
       for (let c = 0; c < s; c++) {
         if (matrixData[r][c]) {
-          // Extrude height 0.2 to 0.6 based on distance from center
+          // Rings of taller and shorter modules radiating from the centre.
           const dist = Math.sqrt(Math.pow(r - s / 2, 2) + Math.pow(c - s / 2, 2));
-          const h = 0.2 + (Math.sin(dist * 0.5) * 0.5 + 0.5) * 0.4;
+          const h = MIN_HEIGHT + (Math.sin(dist * 0.5) * 0.5 + 0.5) * (MAX_HEIGHT - MIN_HEIGHT);
           vList.push({ r, c, baseHeight: h });
         }
       }
@@ -92,8 +101,8 @@ export const VoxelQR: React.FC = () => {
     planeRef.current?.scale.setScalar(Math.max(0.001, effectiveVisibility));
 
     // Flatten mode interpolation (smoothly rotate to top-down flat view)
-    const targetRotX = flattenQR ? 0 : 0.35;
-    const targetRotY = flattenQR ? 0 : 0.45;
+    const targetRotX = flattenQR ? 0 : TILT_X;
+    const targetRotY = flattenQR ? 0 : TILT_Y;
     groupRef.current.rotation.x = THREE.MathUtils.lerp(groupRef.current.rotation.x, targetRotX, 0.1);
     groupRef.current.rotation.y = THREE.MathUtils.lerp(groupRef.current.rotation.y, targetRotY, 0.1);
 
@@ -104,20 +113,22 @@ export const VoxelQR: React.FC = () => {
       pulseScale = 1.0 + Math.sin((pulseDelta / 0.25) * Math.PI) * 0.04;
     }
 
-    const baseScale = (QR_WIDTH / size) * pulseScale * effectiveVisibility;
+    const moduleSize = QR_WIDTH / size;
+    const baseScale = moduleSize * pulseScale * effectiveVisibility;
     const offset = size / 2;
 
     voxels.forEach((v, i) => {
-      const posX = (v.c - offset) * (QR_WIDTH / size);
-      const posY = (offset - v.r) * (QR_WIDTH / size);
+      const posX = (v.c - offset) * moduleSize;
+      const posY = (offset - v.r) * moduleSize;
 
       // Height variation (flat in flatten mode for maximum scanning contrast)
-      const ripple = Math.sin(time * 3.0 - (v.r + v.c) * 0.2) * 0.1;
-      const height = flattenQR ? 0.05 : v.baseHeight + ripple;
+      const ripple = Math.sin(time * 3.0 - (v.r + v.c) * 0.2) * RIPPLE;
+      const height = flattenQR ? 0.05 : (v.baseHeight + ripple) * moduleSize;
       const posZ = height / 2;
 
       dummy.position.set(posX, posY, posZ);
-      dummy.scale.set(baseScale * 0.95, baseScale * 0.95, height * effectiveVisibility);
+      // A small gap between modules keeps the grid readable from an angle.
+      dummy.scale.set(baseScale * 0.9, baseScale * 0.9, height * effectiveVisibility);
       dummy.updateMatrix();
       meshRef.current!.setMatrixAt(i, dummy.matrix);
     });
@@ -149,8 +160,9 @@ export const VoxelQR: React.FC = () => {
           color={flattenQR ? ink : colors.voxel}
           emissive={flattenQR ? ink : colors.voxel}
           emissiveIntensity={flattenQR ? 0 : colors.voxelEmissive}
-          roughness={flattenQR ? 1 : 0.2}
-          metalness={flattenQR ? 0 : 0.6}
+          // Mostly matte, so tops and sides shade differently and each module stands out.
+          roughness={flattenQR ? 1 : 0.45}
+          metalness={flattenQR ? 0 : 0.25}
         />
       </instancedMesh>
 

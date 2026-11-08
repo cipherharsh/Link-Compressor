@@ -490,27 +490,6 @@
   color: var(--color-muted);
 }
 
-.scroll-cue {
-  background: none;
-  border: none;
-  color: var(--color-muted);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
-  cursor: pointer;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
-.scroll-cue__arrow {
-  animation: bounce 2s infinite ease-in-out;
-  font-size: 1.2rem;
-  color: var(--color-accent-text);
-}
-
 /* ───────────────────────── Playground ───────────────────────── */
 
 .playground {
@@ -1734,22 +1713,6 @@
   margin: 0 auto 40px auto;
 }
 
-.fallback__notice {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-small);
-  color: var(--color-xp);
-  background: var(--color-xp-dim);
-  padding: 8px 16px;
-  border-radius: var(--radius-pill);
-  width: 100%;
-  justify-content: center;
-  flex-wrap: wrap;
-  text-align: center;
-}
-
 .fallback__wave-wrap {
   width: 100%;
   text-align: center;
@@ -2133,20 +2096,6 @@
   cursor: not-allowed;
 }
 
-/* "Switch to 3D" inside the 2D notice. */
-.fallback__switch {
-  margin-left: var(--space-2);
-  padding: 0;
-  background: none;
-  border: none;
-  font: inherit;
-  font-weight: 600;
-  color: inherit;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  cursor: pointer;
-}
-
 /* ───────────────────────── Show QR popup ───────────────────────── */
 
 .qr-modal-overlay {
@@ -2358,11 +2307,6 @@
 @keyframes pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.5; transform: scale(0.85); }
-}
-
-@keyframes bounce {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(8px); }
 }
 
 @keyframes floatUpAndFade {

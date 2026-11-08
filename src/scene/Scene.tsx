@@ -9,7 +9,6 @@ import { BlendFunction } from 'postprocessing';
 import { useSceneStore } from '../state/sceneStore';
 import { useSceneTheme } from './sceneTheme';
 import WildStrand from './WildStrand';
-import HuffmanTree from './HuffmanTree';
 import VoxelQR from './VoxelQR';
 import Ambient from './Ambient';
 
@@ -143,7 +142,6 @@ export const Scene: React.FC = () => {
         <group visible={!flattenQR}>
           <Ambient />
           <WildStrand />
-          <HuffmanTree />
         </group>
         <VoxelQR />
       </Suspense>

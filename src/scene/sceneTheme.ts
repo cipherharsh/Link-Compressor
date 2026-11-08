@@ -12,8 +12,6 @@ export interface SceneTheme {
   strandB: string;
   /** Additive glow reads well on dark backgrounds but vanishes on light ones. */
   additive: boolean;
-  treeNode: string;
-  treeLine: string;
   voxel: string;
   voxelEmissive: number;
   lightA: string;
@@ -30,8 +28,6 @@ export const SCENE_THEMES: Record<Theme, SceneTheme> = {
     strandA: '#CDF22B',
     strandB: '#F4F1EC',
     additive: true,
-    treeNode: '#CDF22B',
-    treeLine: '#F4F1EC',
     voxel: '#B8D93C', // a touch deeper than the UI lime so it isn't glaring
     voxelEmissive: 0.22,
     lightA: '#CDF22B',
@@ -46,8 +42,6 @@ export const SCENE_THEMES: Record<Theme, SceneTheme> = {
     strandA: '#6F72C6',
     strandB: '#8FAE2E',
     additive: false,
-    treeNode: '#7A7DCB',
-    treeLine: '#9496B8',
     // Soft periwinkle with some self-light, so the light-mode QR reads as pastel, not harsh navy.
     voxel: '#9A9DD8',
     voxelEmissive: 0.25,

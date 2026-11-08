@@ -56,21 +56,17 @@ LinkZip is a client-side, zero-backend URL compressor and high-density QR code o
  │    ├── THREE.Fog (color: #0B0D12, near: 6, far: 18)
  │    └── THREE.Points (1,500 particles, low draw cost, continuous slow rotation)
  ├── [WildStrand: WildStrand.tsx]
- │    ├── Geometry: THREE.BufferGeometry (20,000 desktop points / 6,000 mobile points along spline)
- │    ├── Material: THREE.ShaderMaterial (AdditiveBlending, transparent, depthWrite: false)
- │    │    ├── Vertex Shader (strand.vert.glsl): procedural 3D curl noise + uCollapse attraction
+ │    ├── Geometry: THREE.BufferGeometry (16,000 desktop / 7,000 mobile / 4,000 low-tier points)
+ │    ├── Material: THREE.ShaderMaterial (additive in dark theme, transparent, depthWrite: false)
+ │    │    ├── Vertex Shader (strand.vert.glsl): screen-wide travelling sine wave + uGather pull
  │    │    └── Fragment Shader (strand.frag.glsl): circular radial alpha falloff + dual glow
- │    └── Uniforms: uTime, uProgress, uCollapse, uLength, uPixelRatio
- ├── [HuffmanTree: HuffmanTree.tsx]
- │    ├── Nodes: THREE.InstancedMesh (THREE.SphereGeometry, meshStandardMaterial)
- │    ├── Branches: THREE.LineSegments (THREE.LineBasicMaterial, opacity fades with collapse)
- │    └── Annotations: drei [Html] tooltips rendering bit savings on hover
+ │    └── Uniforms: uTime, uGather, uSpanScale, uPixelRatio, uColorA, uColorB
  ├── [VoxelQR: VoxelQR.tsx]
  │    ├── Group (tilt rotation lerped; zeroed in flattenQR mode)
  │    ├── Voxels: THREE.InstancedMesh (THREE.BoxGeometry, instance per dark QR module)
- │    │    ├── Heights: extruded 0.2 to 0.6 with ripple wave
+ │    │    ├── Heights: 1.0 to 2.8 modules with a ripple wave (scaled to module size)
  │    │    └── Click: haptic-style pulse (scale 1.04 for 0.25s)
- │    └── Backdrop: THREE.Mesh (planeGeometry 3.6x3.6, pure #0B0D12 contrast floor)
+ │    └── Backdrop: THREE.Mesh (theme background; white paper with quiet zone when flattened)
  └── [Postprocessing: EffectComposer] (disabled on mobile & low tier)
       ├── Bloom (intensity 0.6 normal / 1.2 on collapse, luminanceThreshold 0.2)
       ├── Vignette (darkness 0.8, offset 0.15)
@@ -83,17 +79,13 @@ LinkZip is a client-side, zero-backend URL compressor and high-density QR code o
 
 When a URL is submitted:
 
-1. **Phase 1 (0.0s – 0.4s)**:
-   - `uCollapse` animates from `0.0` to `0.3`.
-   - WildStrand particles tighten inward, curling into the spline core.
-2. **Phase 2 (0.4s – 1.0s)**:
-   - `uCollapse` animates from `0.3` to `0.7`.
-   - Particles route into the HuffmanTree nodes based on `stages[]` data.
-   - Boilerplate particles peel away; dictionary hits glow brightly.
-3. **Phase 3 (1.0s – 1.8s)**:
-   - `uCollapse` reaches `1.0`.
-   - HuffmanTree collapses into the extruded VoxelQR cube with a ripple wave and bloom flash.
-   - User can orbit the 3D cube or toggle **Flatten QR** to scan with a phone camera directly.
+1. **Collapse (0.0s – 1.8s, GSAP `power3.inOut`)**:
+   - `collapseProgress` animates from `0.0` to `1.0` in the scene store.
+   - The WildStrand wave is drawn in towards the centre and dims (`uGather`).
+   - The VoxelQR grows in with its ripple wave; bloom and chromatic aberration flash (dark theme).
+2. **Release (after 1.8s)**:
+   - The wave flows back out to full width; the QR stays.
+   - User can orbit the 3D QR or toggle **Flatten QR** to scan with a phone camera directly.
 
 ---
 
