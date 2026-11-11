@@ -334,7 +334,15 @@ const Playground: React.FC<PlaygroundProps> = ({ linkDomain, onOpenSettings }) =
               </div>
 
               <div className="link-box">
-                <span className={`link-box__url${linkStyle === 'emoji' ? ' is-emoji' : ''}`}>{displayUrl}</span>
+                <a
+                  className={`link-box__url${linkStyle === 'emoji' ? ' is-emoji' : ''}`}
+                  href={displayUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open the compressed link"
+                >
+                  {displayUrl}
+                </a>
                 <button
                   className={`copy-btn${copyState === 'copied' ? ' is-copied' : ''}`}
                   onClick={() => handleCopy(displayUrl)}
@@ -357,7 +365,15 @@ const Playground: React.FC<PlaygroundProps> = ({ linkDomain, onOpenSettings }) =
               </div>
 
               <div className="compress-toolbar">
-                <button className="btn-accent toolbar-primary" onClick={() => setIsQrOpen(true)}>
+                <a
+                  className="btn-accent toolbar-primary"
+                  href={displayUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Open link ↗
+                </a>
+                <button className="toolbar-btn" onClick={() => setIsQrOpen(true)}>
                   Show QR code
                 </button>
                 <button className="toolbar-btn" onClick={() => handleDownloadQR('png')}>Download PNG</button>

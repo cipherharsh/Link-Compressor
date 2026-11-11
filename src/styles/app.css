@@ -668,6 +668,14 @@
   font-size: var(--text-small);
   color: var(--color-accent-text);
   word-break: break-all;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.link-box__url:hover,
+.link-box__url:focus-visible {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .copy-btn {
@@ -1994,9 +2002,13 @@
 }
 
 .compress-toolbar .toolbar-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 8px 18px;
   border-radius: var(--radius-pill);
   font-size: var(--text-2xs);
+  text-decoration: none;
   box-shadow: none;
 }
 
